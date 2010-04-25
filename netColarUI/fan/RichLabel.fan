@@ -32,8 +32,8 @@ class RichLabel : RichText
     override Size prefSize(Hints hints := Hints.defVal)
     {
         md := model as BasicRichTextModel
-        w := md.style.font.width(text) + 10
-        h := md.style.font.height() + 10
+        w := md.style.font.width(text) + 16
+        h := md.style.font.height() + 11
         return Size(w, h)
     }
 }
