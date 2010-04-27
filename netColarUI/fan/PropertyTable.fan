@@ -51,12 +51,12 @@ class PropertyTable : EdgePane
         font = Font("bold "+textFont)
         fg = Color("#000")
       }
-      val := Label
-      {
+      val := RichTextArea(value)
+      /*{
         text = value
         font = Font(textFont)
         fg = Color("#000")
-      }
+      }*/
       grid.add(desc)
       grid.add(val)
     }

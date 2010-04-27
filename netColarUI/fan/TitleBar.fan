@@ -54,11 +54,6 @@ class TitleBar : Canvas
 
   override Size prefSize(Hints hints := Hints.defVal)
   {
-      echo("hints: $hints")
-    pref := super.prefSize(hints)
-      echo("pref: $pref")
-    s := Size(pref.w, font.height + topBotPadding * 2)
-      echo("size: $s")
-    return s
+    return Size(font.width(text) + sidePadding * 2, font.height + topBotPadding * 2)
   }
 }

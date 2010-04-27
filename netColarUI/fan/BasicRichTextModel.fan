@@ -15,7 +15,7 @@ using gfx
 class BasicRichTextModel : RichTextModel
 {
   ** Style
-  RichTextStyle style := RichTextStyle { font = Font { name="Courier New"; size=9 }}
+  RichTextStyle style := RichTextStyle { font = Font { size = 10 }}
   ** the text
   override Str text := ""
 
