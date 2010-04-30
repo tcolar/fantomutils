@@ -18,20 +18,12 @@ class LabelTest
     // otherwise RichLabel font.width use throws an Err
     Desktop.bounds
 
-    pane := EdgePane{center=RichLabel("Hello dude")}
-    win := Window
+    Window
     {
       title = "Label test"
       size = Size(600, 400)
-      content = GridPane{
-        halignCells = Halign.fill
-        numCols = 2;
-        RichLabel("Hello dude"),
-        Label{text="blah"},
-      }
-    }
-
-    win.open
+      TitleBar{text = "New title"},
+	}.open
   }
 
 }

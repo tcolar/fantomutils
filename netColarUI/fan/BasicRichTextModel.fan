@@ -77,4 +77,9 @@ class BasicRichTextModel : RichTextModel
       return [style]
   }
 
+  ** Width in pixels of the longest line of this text
+  Int longestLineWidth()
+  {
+	  text.splitLines.reduce(0) |val, line| { style.font.width(line).max(val) }
+  }
 }

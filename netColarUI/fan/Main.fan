@@ -16,29 +16,14 @@ class Main
   {
     Window
     {
-      size = Size(800,600)
-      content  = BorderPane
-      {
-          insets = Insets("4")
-          bg = Color.red
-        content = GridPane
-        {
-          numCols = 1
-          expandCol = 0
-          uniformCols = true
-
-          BorderPane{
-              insets = Insets("4")
-              bg = Color.blue
-          content = EdgePane
-          {
-            left = Label{text = "Hello"}
-            right = Label{text = "Bye Bye"}
-          }
-          },
-          BorderPane{bg=Color.yellow; Insets("4")},
-        }
-      }
+      size = Size(300, 300)
+	  InsetPane
+	  {
+		ScrollPane
+		{
+		  Label{text = "fdsfdsfsdfdsfdfsdfdsfdsfdsfdsfdssfdsfsfsdfdsfdsfdsfdsfdsfdsfdsfdsf"},
+		},
+	  },
     }.open
   }
 }

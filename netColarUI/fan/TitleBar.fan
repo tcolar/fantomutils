@@ -6,7 +6,8 @@ using gfx
 
 ** Draws a full width Title bar.
 ** Text can be justified.
-class TitleBar : Canvas
+**
+class TitleBar : GridPane
 {
   Str text := ""
   Brush bg := Color("#DDDDDD")
@@ -22,38 +23,56 @@ class TitleBar : Canvas
   Int underlineHeight := 0
   Brush underlineBrush := Color("#000000")
 
+  new make()
+  {
+	numCols = 1
+	expandCol = 0
+	halignCells = Halign.fill
+	add(TitlebarCanvas(this))
+  }
+}
+
+class TitlebarCanvas : Canvas
+{
+  TitleBar bar
+
+  new make(TitleBar bar)
+  {
+	this.bar = bar
+  }
+
   override Void onPaint(Graphics g)
   {
     w := size.w
     h := size.h
     shade := 1
 
-    g.brush = bg
+    g.brush = bar.bg
     g.fillRect(0, 0, w, h)
-    g.brush = fg
-    g.font = font
-    width := font.width(text)
-    x := sidePadding
-    switch(halign)
+    g.brush = bar.fg
+    g.font = bar.font
+    width := bar.font.width(bar.text)
+    x := bar.sidePadding
+    switch(bar.halign)
     {
-        case Halign.left:
-            x = sidePadding
-        case Halign.right:
-            x = w - sidePadding - width
-        case Halign.center:
-            x = (w - width) / 2
-        default:
-            echo("Unsupported Alignment: $halign")
+	  case Halign.left:
+		x = bar.sidePadding
+	  case Halign.right:
+		x = w - bar.sidePadding - width
+	  case Halign.center:
+		x = (w - width) / 2
+	  default:
+		echo("Unsupported Alignment: $bar.halign")
     }
-    g.drawText(text, x, topBotPadding)
-    if(underlineHeight > 0)
-    {
-       g.fillRect(sidePadding, h - underlineHeight, w - sidePadding * 2, underlineHeight)
+    g.drawText(bar.text, x, bar.topBotPadding)
+    if(bar.underlineHeight > 0)
+	  {
+	  g.fillRect(bar.sidePadding, h - bar.underlineHeight, w - bar.sidePadding * 2, bar.underlineHeight)
     }
   }
 
   override Size prefSize(Hints hints := Hints.defVal)
   {
-    return Size(font.width(text) + sidePadding * 2, font.height + topBotPadding * 2)
+    return Size(bar.font.width(bar.text) + bar.sidePadding * 2, bar.font.height + bar.topBotPadding * 2)
   }
 }

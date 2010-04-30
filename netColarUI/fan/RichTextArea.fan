@@ -22,6 +22,7 @@ class RichTextArea : RichText
             style = lblStyle
         }
         model = myModel
+		font = myModel.style.font
         prefRows = myModel.lineCount
         editable = false
         hscroll = false
@@ -33,7 +34,7 @@ class RichTextArea : RichText
     {
         md := model as BasicRichTextModel
         // TODO: unfortunately margins are hardcoded in RichTextPeer (top:0, others: 8)
-        w := md.lineCount * md.style.font.width(text) + 16 + 2
+        w := md.longestLineWidth + 16
         h := md.lineCount * md.style.font.height() + 8
         return Size(w, h)
     }

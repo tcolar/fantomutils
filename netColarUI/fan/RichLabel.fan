@@ -26,7 +26,6 @@ class RichLabel : RichText
             style = lblStyle
         }
         pack
-        echo("prefSize: $prefSize")
     }
 
     override Size prefSize(Hints hints := Hints.defVal)
