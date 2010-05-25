@@ -6,7 +6,7 @@
 //
 
 **
-** DBFacets
+** TableModel : Facet to customize a DBModel and it's mapping to a database table
 **
 facet class TableModel
 {
@@ -22,21 +22,21 @@ facet class TableModel
   const Slot? primaryKey
 }
 
+**
+** FieldModel : Facet to cutomize a DBModel field and it's mapping to a database column
+**
 facet class FieldModel
 {
   ** Field name, If null base on Field name
   const Str? name
 
-  ** Specify the field size - Only used for filed some filed types, lsuch as string / varchar
-  const Int? size
+  //** Specify the field size - Only used for some filed types, such as varchar
+  // TODO: const Int? size
 
-  ** Min/Max values, only makes sense for Number fields
-  const Num? minVal
-  const Num? maxVal
+  //** Min/Max values, only makes sense for Number fields
+  // TODO const Num? minVal
+  // TODO const Num? maxVal
 
-  ** Whether to indedx this field**
+  ** Whether to index this field in the DB**
   const Bool indexIt := false
-
-  ** Whether this is the primary key, usually an automatic key called 'ID' is auto-generated
-  const Bool isPKey := false
 }

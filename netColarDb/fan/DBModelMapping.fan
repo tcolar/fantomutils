@@ -8,13 +8,14 @@ using sql
 
 **
 ** DBModelMapping
+** Holds the mapping between a DBModel fields and the corresponding DB Table
 **
 const class DBModelMapping
 {
-  final Str name
-  final Str dbName
-  final TableModel? tableModel
-  final FieldMapping[] fields := [,]
+  const Str name
+  const Str dbName
+  const TableModel? tableModel
+  const FieldMapping[] fields := [,]
 
   new make(SqlService db, Type model)
   {
@@ -36,7 +37,7 @@ const class DBModelMapping
     if(! DBUtil.tableExists(db, dbName))
     {
       if(tableModel == null || tableModel.autoCreate)
-        DBUtil.createTable(db, dbName, this)
+        DBUtil.createTable(db, this)
       else
         throw Err("Database $dbName does not exist and autocreate is turned off")
     }
@@ -45,54 +46,63 @@ const class DBModelMapping
     // TODO: ... or try to alter as needed on the fly
   }
 
-  once Str[] getCreateTableSql()
+  ** Returns the SQL commands to create the Table associated with this mapping
+  Str[] getCreateTableSql()
   {
-    Str columns := ""
+    columns := StrBuf()
+    Str? pKey := DBUtil.normalizeDBName(tableModel?.primaryKey?.name)
+    pKey ?: DBUtil.normalizeDBName("id")
     fields.each
     {
-      Str Size :=  it.dbSize != null ? "($it.dbSize)" : ""
-      columns += "${it.dbName} ${it.dbType}${it.dbSize} ,"
+      //Str size :=  it.dbSize != null ? "($it.dbSize)" : ""
+      Str notNull := it.nullable ? "" : "NOT NULL"
+      columns.add("${it.dbName} ${it.dbType} ${notNull},")
     }
     Str[] sql := [,]
-    sql.add("CREATE TABLE $dbname (${column}))
-/*JOTDBManager.getInstance().update(con, "CREATE TABLE " + mapping.getTableName() + "(" + columns + ")");
-					JOTDBManager.getInstance().update(con, "ALTER TABLE " + mapping.getTableName() + " ADD PRIMARY KEY (" + "ID" + ")");
-					Vector indexes = mapping.getIndexes();
-					for (int i = 0; i != indexes.size(); i++)
-					{
-						String column = (String) indexes.get(i);
-						String indexName = "IDX_" + mapping.getTableName() + "_" + column;
-						JOTDBManager.getInstance().update(con, "CREATE UNIQUE INDEX " + indexName + " ON " + mapping.getTableName() + " (" + column + ")");
-					}
-                    JOTModelMapping.writeMetaFile(mapping);
-        */
+    sql.add("CREATE TABLE $dbName (${columns.toStr})")
+    sql.add("ALTER TABLE $dbName ADD PRIMARY KEY (${pKey})")
+    fields.each
+    {
+      if(it.fieldModel?.indexIt)
+      {
+        indexName := "IDX_${this.dbName}_${it.dbName}"
+        sql.add("CREATE UNIQUE INDEX $indexName ON ${this.dbName} (${it.dbName})")
+      }
+    }
+    return sql
   }
 }
 
+** Database Column Types enum
 enum class FieldType
 {
-  VARCHAR, BIT, BIGINT, FLOAT, DOUBLE, DATE, TIME, TIMESTAMP
+  VARCHAR, BIT, BIGINT, FLOAT, DOUBLE, DATE, TIME, TIMESTAMP, NA
 }
 
+** Mapping for a single Field (to a table column)
 const class FieldMapping
 {
-  final Str name
-  final Str dbName
-  final FieldModel? fieldModel
-  final Str dbType
-  final Int dbSize
+  const Str name
+  const Str dbName
+  const FieldModel? fieldModel
+  const Str dbType
+  //final Int dbSize
+  const Bool nullable
 
   new make(Field f)
   {
     name = f.name
+    nullable = f.typeof.isNullable
     fieldModel = f.facet(FieldModel#, false)
     dbName = fieldModel?.name
     dbName ?: DBUtil.normalizeDBName(name)
     dbType := getFieldType(f).name
-    dbSize = fieldModel?.size
-    dbSize ?: 80 // default
+    //dbSize = fieldModel?.size
+    // Default size (for varchar)
+    //dbSize ?: 80
   }
 
+  ** Get the proper DB column type equivalent for the given Fantom field
   static FieldType getFieldType(Field f)
   {
     // TODO: allow DBModel childs ?
@@ -108,8 +118,10 @@ const class FieldMapping
       case Date#:     return FieldType.DATE
       case Time#:     return FieldType.TIME
       case DateTime#: return FieldType.TIMESTAMP
+      
       // TODO: Serialize any other types ?
       //default:        return FieldType.TEXT CLOB ? VarChar ?
     }
+    return FieldType.NA;
   }
 }

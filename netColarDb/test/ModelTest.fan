@@ -5,19 +5,19 @@
 //   May 24, 2010 thibautc Creation
 //
 
-**
-** ModelTest
-**
-@TableModel{name = "MODEL_TEST"}
-class Model : DBModel
-{
-  @FieldModel {name="KEY"; isPKey=true; size=40}
-  Str key
-
-  Int val
-}
-
 class ModelTest : Test
 {
-  
+  Void testModel()
+  {
+    m := ModelA()
+    m.save
+  }
 }
+
+class ModelA : DBModel
+{
+  Str keyField := "AbcdEf"
+  Int val := 35
+  @Transient Int hideit := 24
+}
+

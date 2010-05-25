@@ -15,7 +15,7 @@ class Build : BuildPod
   {
     podName = "netColarDb"
 	summary = "netColarDb"
-    depends = ["sys 1.0"]
+    depends = ["sys 1.0", "sql 1.0"]
     srcDirs = [`fan/`, `test/`]
   }
 }
