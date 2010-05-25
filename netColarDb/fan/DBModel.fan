@@ -21,7 +21,7 @@ class DBModel
   ** "Make"(load) the object a row in the matching database table.
   static DBModel loadFromRow(Row row)
   {
-    This instance := This.make
+    DBModel instance := make
     mapping := getMapping(this)
     mapping.fields.each |FieldMapping fm|
     {
