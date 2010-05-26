@@ -30,8 +30,8 @@ facet class FieldModel
   ** Field name, If null base on Field name
   const Str? name
 
-  //** Specify the field size - Only used for some filed types, such as varchar
-  // TODO: const Int? size
+  //** Specify the field size - Only used for some field types, such as varchar
+  const Int size := 80
 
   //** Min/Max values, only makes sense for Number fields
   // TODO const Num? minVal
@@ -39,4 +39,10 @@ facet class FieldModel
 
   ** Whether to index this field in the DB**
   const Bool indexIt := false
+}
+
+** Mark a custom field to be serialized(~JSON string) when saved to the database
+** (Uses a 2000 length varchar)
+facet class SerializeField
+{
 }

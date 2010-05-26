@@ -4,20 +4,35 @@
 // History:
 //   May 24, 2010 thibautc Creation
 //
+using sql
 
 class ModelTest : Test
 {
+  SqlService? db
+
+  override Void setup()
+  {
+    db = SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+    db.open
+  }
+
+  override Void teardown()
+  {
+    db?.close
+  }
+
   Void testModel()
   {
     m := ModelA()
-    m.save
+    m.save(db)
   }
 }
 
 class ModelA : DBModel
 {
   Str keyField := "AbcdEf"
-  Int val := 35
-  @Transient Int hideit := 24
+  Int myval := 35
+  @Transient Int dontSaveIt := 24
+  @SerializeField Str[] mylist := ["Me", "You", "Everybody"]
 }
 

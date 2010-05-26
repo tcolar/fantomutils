@@ -36,15 +36,17 @@ class SelectQuery : QueryBase
   ** Add a where clause to the query (WHERE / AND WHERE)
   This where(QueryCond cond)
   {
-    params.add(cond.val);
-    return whereSql(cond.getSquelStr);
+    sql := cond.getSquelStr(getNextParamName)
+    params.set(getNextParamName, cond.val)
+    return whereSql(sql);
   }
 
   ** Add a where clause to the query (OR WHERE)
   This orWhere(QueryCond cond)
   {
-    params.add(cond.val);
-    return orWhereSql(cond.getSquelStr);
+    sql := cond.getSquelStr(getNextParamName)
+    params.set(getNextParamName, cond.val)
+    return orWhereSql(sql);
   }
 
   ** Run the query and returns matching rows
@@ -76,7 +78,7 @@ abstract class QueryBase
 {
   StrBuf sql := StrBuf()
   Int nbWhere := 0;
-  Obj[]? params := [,]
+  [Str:Obj]? params := [:]
 
   ** Appends "raw" sql to the query being built, preferably not to be used directly
   This appendToSql(Str s)
@@ -84,6 +86,13 @@ abstract class QueryBase
     sql.add(s)
     return this
   }
+
+  internal Str getNextParamName()
+  {
+    sz := params.size+1
+    return "@p${sz}"
+  }
+
 }
 
 
@@ -101,32 +110,32 @@ class QueryCond
     this.val=val
   }
 
-  ** Return the Comparator (Enum) as an SQL query squeleton (ex: "= ?")
+  ** Return the Comparator (Enum) as an SQL comparator
   internal Str getSQLComparator()
   {
-    Str s := " = ?";
+    Str s := "=";
 	switch(comp)
 	{
 		case SqlComp.GREATER:
-             s=" > ?"
+             s=">"
 		case SqlComp.GREATER_OR_EQ:
-             s=" >= ?"
+             s=">="
 		case SqlComp.LOWER:
-             s=" < ?"
+             s="<"
 		case SqlComp.LOWER_OR_EQ:
-             s=" <= ?"
+             s="<="
 		case SqlComp.LIKE:
-             s=" like ?"
+             s="like"
 		case SqlComp.NOT_EQUAL:
-             s=" <> ?"
+             s="<>"
 	}
 	return s;
   }
 
   ** Return The condition as an SQL squeleton (ex: "age >= ?")
-  internal once Str getSquelStr()
+  internal Str getSquelStr(Str paramName)
   {
-    "$field $getSQLComparator ";
+    return "$field $getSQLComparator $paramName ";
   }
 }
 
@@ -136,8 +145,9 @@ class QueryManager
   ** Execute a query usinf Fantom's SQL Api's
   static Row[] execute(SqlService db, Str squeleton, [Str:Obj]? params, Bool isUpdate)
   {
-    Row[]? rows
-    stmt := db.sql.prepare
+    Row[] rows := [,]
+    echo("Will execute: '${squeleton}' with : $params")
+    stmt := db.sql(squeleton).prepare()
     if(isUpdate)
       stmt.execute(params)
     else

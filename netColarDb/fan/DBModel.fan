@@ -19,10 +19,10 @@ class DBModel
   Int id := -1 // -1 means new
 
   ** "Make"(load) the object a row in the matching database table.
-  static DBModel loadFromRow(Row row)
+  static DBModel loadFromRow(SqlService db, Row row)
   {
-    DBModel instance := make
-    mapping := getMapping(this)
+    instance := make
+    mapping := getMapping(db, instance.typeof)
     mapping.fields.each |FieldMapping fm|
     {
       Field? field := instance.typeof.field(fm.name, false)
@@ -34,6 +34,7 @@ class DBModel
   ** Save the object into the database
   Void save(SqlService db)
   {
+    mapping := getMapping(db, this.typeof)
     //db.sql("DELETE FROM @COL WHERE ID = @ID", ["TBL": name, "ID":id])
     //TODO
   }
@@ -53,7 +54,7 @@ class DBModel
     Row[] rows := query.find(db)
     if(rows.size == 0)
       return null
-    return loadFromRow(rows[0])
+    return loadFromRow(db, rows[0])
   }
 
   //** Return the object for the given ID
@@ -69,7 +70,7 @@ class DBModel
   {
     Row[] rows := query.find(db)
     if( ! rows.isEmpty)
-      return loadFromRow(rows[0])
+      return loadFromRow(db, rows[0])
     // Else, create a new one
     return make
   }
@@ -80,7 +81,7 @@ class DBModel
     // TODO: Deal with limit, once fantom sql supports it
     Row[] rows := query.find(db)
     DBModel[] objs := [,]
-    rows.each { objs.add(loadFromRow(it)) }
+    rows.each { objs.add(loadFromRow(db, it)) }
     return objs
   }
 

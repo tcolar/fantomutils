@@ -15,7 +15,7 @@ const class DBModelMapping
   const Str name
   const Str dbName
   const TableModel? tableModel
-  const FieldMapping[] fields := [,]
+  const FieldMapping[] fields
 
   new make(SqlService db, Type model)
   {
@@ -25,14 +25,22 @@ const class DBModelMapping
     name = model.name
     tableModel = model.facet(TableModel#, false)
 
-    dbName = tableModel?.name
-    dbName ?: DBUtil.normalizeDBName(name)
-
+    if(tableModel!=null)
+    {
+      dbName = tableModel?.name
+    }
+    else
+    {
+      dbName = DBUtil.normalizeDBName(name)
+    }
+    // use a temp list, because fields is a const, and alls to add on const lists results in a runtime exception
+    tmpList := FieldMapping[,]
     model.fields.each |Field f|
     {
       if( ! f.hasFacet(Transient#))
-        fields.add(FieldMapping(f))
+        tmpList.add(FieldMapping(f))
     }
+    fields = tmpList
 
     if(! DBUtil.tableExists(db, dbName))
     {
@@ -50,20 +58,21 @@ const class DBModelMapping
   Str[] getCreateTableSql()
   {
     columns := StrBuf()
-    Str? pKey := DBUtil.normalizeDBName(tableModel?.primaryKey?.name)
-    pKey ?: DBUtil.normalizeDBName("id")
+    Str pKey := DBUtil.normalizeDBName(tableModel?.primaryKey?.name) ?: DBUtil.normalizeDBName("id")
     fields.each
     {
-      //Str size :=  it.dbSize != null ? "($it.dbSize)" : ""
+      Str size :=  it.dbSize > -1 ? "(${it.dbSize})" : ""
       Str notNull := it.nullable ? "" : "NOT NULL"
-      columns.add("${it.dbName} ${it.dbType} ${notNull},")
+      if(columns.size>0)
+        columns.add(", ")
+      columns.add("${it.dbName} ${it.dbType}${size} ${notNull}")
     }
     Str[] sql := [,]
     sql.add("CREATE TABLE $dbName (${columns.toStr})")
     sql.add("ALTER TABLE $dbName ADD PRIMARY KEY (${pKey})")
     fields.each
     {
-      if(it.fieldModel?.indexIt)
+      if(it.fieldModel!=null && it.fieldModel.indexIt)
       {
         indexName := "IDX_${this.dbName}_${it.dbName}"
         sql.add("CREATE UNIQUE INDEX $indexName ON ${this.dbName} (${it.dbName})")
@@ -86,7 +95,7 @@ const class FieldMapping
   const Str dbName
   const FieldModel? fieldModel
   const Str dbType
-  //final Int dbSize
+  const Int dbSize
   const Bool nullable
 
   new make(Field f)
@@ -94,19 +103,19 @@ const class FieldMapping
     name = f.name
     nullable = f.typeof.isNullable
     fieldModel = f.facet(FieldModel#, false)
-    dbName = fieldModel?.name
-    dbName ?: DBUtil.normalizeDBName(name)
-    dbType := getFieldType(f).name
-    //dbSize = fieldModel?.size
-    // Default size (for varchar)
-    //dbSize ?: 80
+    dbType = getFieldType(f).name
+    dbName = fieldModel?.name ?: DBUtil.normalizeDBName(name)
+    dbSize = getFieldSize(f)
   }
 
   ** Get the proper DB column type equivalent for the given Fantom field
   static FieldType getFieldType(Field f)
   {
+    if(f.hasFacet(SerializeField#))
+      return FieldType.VARCHAR
+
     // TODO: allow DBModel childs ?
-    switch(f.typeof)
+    switch(f.type)
     {
       case Bool#:     return FieldType.BIT
       case Int#:      return FieldType.BIGINT
@@ -119,9 +128,24 @@ const class FieldMapping
       case Time#:     return FieldType.TIME
       case DateTime#: return FieldType.TIMESTAMP
       
-      // TODO: Serialize any other types ?
-      //default:        return FieldType.TEXT CLOB ? VarChar ?
+      default :       echo("Will not save field $f type: $f.type")
     }
     return FieldType.NA;
+  }
+
+  static Int getFieldSize(Field f)
+  {
+    if(f.hasFacet(SerializeField#))
+      return 2000
+
+    FieldModel? model := f.facet(FieldModel#, false)
+    Int sz := model?.size ?: 80
+    switch(f.type)
+    {
+      case Str#:      return sz
+      case Uri#:      return sz
+      case Duration#: return sz
+    }
+    return -1;
   }
 }
