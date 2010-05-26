@@ -18,7 +18,7 @@ class DBModel
   ** Default primaryKey, unless other specified with TableModel
   Int id := -1 // -1 means new
 
-  ** "Make"(load) the object a row in the matching database table.
+  ** "Make"(load) an object from a row in the matching database table.
   static DBModel loadFromRow(SqlService db, Row row)
   {
     instance := make
@@ -31,27 +31,38 @@ class DBModel
     return instance
   }
 
-  ** Save the object into the database
+  ** Save/Update the object into the database
   Void save(SqlService db)
   {
     mapping := getMapping(db, this.typeof)
-    //db.sql("DELETE FROM @COL WHERE ID = @ID", ["TBL": name, "ID":id])
-    //TODO
+
+    if(isNew)
+    {
+      id = DBUtil.nextVal(db, mapping.dbName)
+      Str:Obj? values := mapping.getValues(this)
+      // Create unique ID
+      InsertQuery(this.typeof, values).run(db)
+    }
+    else
+    {
+      Str:Obj? values := mapping.getValues(this)
+      UpdateQuery(this.typeof, values).where(QueryCond("id", SqlComp.EQUAL, id)).run(db)
+    }
   }
 
   ** Delete the object from the database
-  ** Note that if you saev a previously deleted object, it will create a brand new entry (with a new ID)
+  ** Note that if you save a previously deleted object, it will create a brand new entry (with a new ID)
   Void delete(SqlService db)
   {
-    //TODO
-    //db.sql("DELETE FROM @COL WHERE ID = @ID", ["TBL": name, "ID":id])
+    mapping := getMapping(db, this.typeof)
+    DeleteQuery(this.typeof).where(QueryCond("id", SqlComp.EQUAL, id)).run(db)
     id = -1
   }
 
   ** Return the first match (if any) for the given query
   static DBModel? findOne(SqlService db, SelectQuery query)
   {
-    Row[] rows := query.find(db)
+    Row[] rows := query.run(db)
     if(rows.size == 0)
       return null
     return loadFromRow(db, rows[0])
@@ -68,7 +79,7 @@ class DBModel
   ** If no match was found, then create a new object
   static DBModel findOrCreateOne(SqlService db, SelectQuery query)
   {
-    Row[] rows := query.find(db)
+    Row[] rows := query.run(db)
     if( ! rows.isEmpty)
       return loadFromRow(db, rows[0])
     // Else, create a new one
@@ -79,7 +90,7 @@ class DBModel
   static DBModel[] findAll(SqlService db, SelectQuery query, Int limit := -1)
   {
     // TODO: Deal with limit, once fantom sql supports it
-    Row[] rows := query.find(db)
+    Row[] rows := query.run(db)
     DBModel[] objs := [,]
     rows.each { objs.add(loadFromRow(db, it)) }
     return objs
@@ -92,5 +103,10 @@ class DBModel
     DBModelMapping(db, modelType)
   }
 
+  ** Whether this is a new item (not in DB yet)
+  Bool isNew()
+  {
+    id == -1
+  }
 }
 

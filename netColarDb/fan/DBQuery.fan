@@ -14,7 +14,7 @@ enum class SqlComp
 
 ** SQL Select query builder
 ** Note: Methods need to be called in the correct Sql order.
-class SelectQuery : QueryBase
+class SelectQuery : ConditionalQuery
 {
   new make(Type dbModel, Str selectWhat := "*")
   {
@@ -32,29 +32,68 @@ class SelectQuery : QueryBase
   {
     appendToSql("ORDER BY $orderBy ");
   }
+}
 
-  ** Add a where clause to the query (WHERE / AND WHERE)
-  This where(QueryCond cond)
+** Delete query builder
+class DeleteQuery : ConditionalQuery
+{
+  new make(Type dbModel)
   {
-    sql := cond.getSquelStr(getNextParamName)
-    params.set(getNextParamName, cond.val)
-    return whereSql(sql);
+    expectResults = false
+    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    appendToSql("DELETE FROM $tableName ");
   }
+}
 
-  ** Add a where clause to the query (OR WHERE)
-  This orWhere(QueryCond cond)
+** Insert query builder
+** Values is a map of dbColumnName:Value to be inserted
+class InsertQuery : QueryBase
+{
+
+  new make(Type dbModel, Str:Obj? values)
   {
-    sql := cond.getSquelStr(getNextParamName)
-    params.set(getNextParamName, cond.val)
-    return orWhereSql(sql);
+    expectResults = false
+    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    colStr := StrBuf()
+    valStr := StrBuf()
+    values.each |val, key|
+    {
+      if(colStr.size > 0)
+        colStr.add(", ")
+      colStr.add(key)
+      if(valStr.size > 0)
+        valStr.add(", ")
+      valStr.add(getNextParamName)
+      params.set(getNextParamName, val)
+    }
+    appendToSql("INSERT INTO $tableName ($colStr.toStr) VALUES($valStr.toStr) ");
   }
+}
 
-  ** Run the query and returns matching rows
-  Row[] find(SqlService db)
+** Insert query builder
+** Values is a map of dbColumnName:Value to be updated
+class UpdateQuery : ConditionalQuery
+{
+
+  new make(Type dbModel, Str:Obj? values)
   {
-    QueryManager.execute(db, sql.toStr, params, false)
+    expectResults = false
+    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    setStr := StrBuf()
+    values.each |val, key|
+    {
+      if(setStr.size > 0)
+        setStr.add(", ")
+      setStr.add("${key}=${getNextParamName}")
+      params.set(getNextParamName, val)
+    }
+    appendToSql("UPDATE $tableName SET $setStr.toStr ");
   }
+}
 
+** Base for queries that take conditions (where)
+abstract class ConditionalQuery : QueryBase
+{
   ** Add a where clause to the query (WHERE / AND WHERE)
   internal This whereSql(Str sql)
   {
@@ -71,6 +110,21 @@ class SelectQuery : QueryBase
     return this;
   }
 
+  ** Add a where clause to the query (WHERE / AND WHERE)
+  This where(QueryCond cond)
+  {
+    sql := cond.getSquelStr(getNextParamName)
+    params.set(getNextParamName, cond.val)
+    return whereSql(sql);
+  }
+
+  ** Add a where clause to the query (OR WHERE)
+  This orWhere(QueryCond cond)
+  {
+    sql := cond.getSquelStr(getNextParamName)
+    params.set(getNextParamName, cond.val)
+    return orWhereSql(sql);
+  }
 }
 
 ** Base of all query builders
@@ -79,6 +133,7 @@ abstract class QueryBase
   StrBuf sql := StrBuf()
   Int nbWhere := 0;
   [Str:Obj]? params := [:]
+  Bool expectResults := true
 
   ** Appends "raw" sql to the query being built, preferably not to be used directly
   This appendToSql(Str s)
@@ -93,6 +148,12 @@ abstract class QueryBase
     return "@p${sz}"
   }
 
+  ** Run the query
+  Row[] run(SqlService db)
+  {
+    QueryManager.execute(db, sql.toStr, params, ! expectResults)
+  }
+
 }
 
 
@@ -101,9 +162,9 @@ class QueryCond
 {
   Str field
   SqlComp comp
-  Obj val
+  Obj? val
 
-  new make(Str field, SqlComp comp, Str val)
+  new make(Str field, SqlComp comp, Obj? val)
   {
     this.field=field
     this.comp=comp

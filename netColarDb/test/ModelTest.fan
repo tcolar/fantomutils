@@ -30,9 +30,9 @@ class ModelTest : Test
 
 class ModelA : DBModel
 {
-  Str keyField := "AbcdEf"
-  Int myval := 35
-  @Transient Int dontSaveIt := 24
-  @SerializeField Str[] mylist := ["Me", "You", "Everybody"]
+  //Str keyField := "AbcdEf"
+  //Int myval := 35
+  //@Transient Int dontSaveIt := 24
+  //@SerializeField Str[] mylist := ["Me", "You", "Everybody"]
 }
 

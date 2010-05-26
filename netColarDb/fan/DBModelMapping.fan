@@ -54,6 +54,18 @@ const class DBModelMapping
     // TODO: ... or try to alter as needed on the fly
   }
 
+  ** Return a map of the field values for the DBModel:  [dbName:Value]
+  Str:Obj? getValues(DBModel model)
+  {
+    Str:Obj? values := [:]
+    fields.each
+    {
+      Obj? value := model.typeof.field(it.name, true).get(model)
+      values.set(it.dbName, value)
+    }
+    return values
+  }
+
   ** Returns the SQL commands to create the Table associated with this mapping
   Str[] getCreateTableSql()
   {
@@ -133,6 +145,9 @@ const class FieldMapping
     return FieldType.NA;
   }
 
+  ** Return the field length  -1(none) for any fields
+  ** For Varchar defaults to 80, unless otherwise specified with FieldModel.size
+  ** Fields marked with SerializeField are Varchar(2000)
   static Int getFieldSize(Field f)
   {
     if(f.hasFacet(SerializeField#))
