@@ -55,6 +55,7 @@ class DBUtil
   // TODO: needs to be done atomically, how to do that in fantom ??
   static Int nextVal(SqlService db, Str counterName)
   {
+    //TODO: Useless DB2 just returns db(this)
     SqlService db2 := db.open
     db2.autoCommit = false
     Int id := 1
