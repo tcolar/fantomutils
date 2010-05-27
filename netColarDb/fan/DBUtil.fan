@@ -53,9 +53,10 @@ class DBUtil
   }
 
   // TODO: needs to be done atomically, how to do that in fantom ??
+  // TODO: Maybe use SqlDialect instead and implement autoincrement for several DB's
   static Int nextVal(SqlService db, Str counterName)
   {
-    //TODO: Useless DB2 just returns db(this)
+    //TODO: Useless since DB2 just returns db(this) -> just use db and set it to autocmmit and back as needed
     SqlService db2 := db.open
     db2.autoCommit = false
     Int id := 1
