@@ -37,6 +37,8 @@ facet class FieldModel
   // TODO const Num? minVal
   // TODO const Num? maxVal
 
+  // TODO: Unique
+
   ** Whether to index this field in the DB**
   const Bool indexIt := false
 }
