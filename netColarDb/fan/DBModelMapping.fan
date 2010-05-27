@@ -61,6 +61,9 @@ const class DBModelMapping
     fields.each
     {
       Obj? value := model.typeof.field(it.name, true).get(model)
+	  // String type or Serialized objects -> serialize
+	  if(it.dbType == FieldType.VARCHAR.name)
+		  value = value.toStr
       values.set(it.dbName, value)
     }
     return values

@@ -65,14 +65,15 @@ class DBUtil
       if( ! tableExists(db2, counterTable))
       {
         QueryManager.execute(db2, "CREATE TABLE $counterTable (name VARCHAR(80) NOT NULL, val BIGINT NOT NULL)", null, true)
+	    QueryManager.execute(db2, "INSERT INTO $counterTable (val, name) values(1, '$counterName')", null, true)
       }
-      Row[] rows := QueryManager.execute(db2, "select * from $counterTable where name='$counterName'", null, false)
+      Row[] rows := QueryManager.execute(db2, "SELECT * FROM $counterTable WHERE name='$counterName'", null, false)
       if(! rows.isEmpty)
       {
        id = rows[0]->val
       }
       nextId := id + 1
-      QueryManager.execute(db2, "insert into $counterTable (val, name) values($nextId, '$counterName')", null, true)
+      QueryManager.execute(db2, "UPDATE $counterTable set val=$nextId WHERE name='$counterName'", null, true)
       db2.commit
     }
     catch (Err e)

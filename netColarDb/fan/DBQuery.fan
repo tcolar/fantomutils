@@ -63,7 +63,7 @@ class InsertQuery : QueryBase
       colStr.add(key)
       if(valStr.size > 0)
         valStr.add(", ")
-      valStr.add(getNextParamName)
+      valStr.add("@$getNextParamName")
       params.set(getNextParamName, val)
     }
     appendToSql("INSERT INTO $tableName ($colStr.toStr) VALUES($valStr.toStr) ");
@@ -84,7 +84,7 @@ class UpdateQuery : ConditionalQuery
     {
       if(setStr.size > 0)
         setStr.add(", ")
-      setStr.add("${key}=${getNextParamName}")
+      setStr.add("${key}=@${getNextParamName}")
       params.set(getNextParamName, val)
     }
     appendToSql("UPDATE $tableName SET $setStr.toStr ");
@@ -113,7 +113,7 @@ abstract class ConditionalQuery : QueryBase
   ** Add a where clause to the query (WHERE / AND WHERE)
   This where(QueryCond cond)
   {
-    sql := cond.getSquelStr(getNextParamName)
+    sql := cond.getSquelStr("@$getNextParamName")
     params.set(getNextParamName, cond.val)
     return whereSql(sql);
   }
@@ -121,7 +121,7 @@ abstract class ConditionalQuery : QueryBase
   ** Add a where clause to the query (OR WHERE)
   This orWhere(QueryCond cond)
   {
-    sql := cond.getSquelStr(getNextParamName)
+    sql := cond.getSquelStr("@$getNextParamName")
     params.set(getNextParamName, cond.val)
     return orWhereSql(sql);
   }
@@ -145,7 +145,7 @@ abstract class QueryBase
   internal Str getNextParamName()
   {
     sz := params.size+1
-    return "@p${sz}"
+    return "p${sz}"
   }
 
   ** Run the query
