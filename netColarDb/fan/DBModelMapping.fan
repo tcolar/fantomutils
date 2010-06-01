@@ -58,13 +58,16 @@ const class DBModelMapping
   Str:Obj? getValues(DBModel model)
   {
     Str:Obj? values := [:]
-    fields.each
+    fields.each |FieldMapping fm|
     {
-      Obj? value := model.typeof.field(it.name, true).get(model)
-	  // String type or Serialized objects -> serialize
-	  if(it.dbType == FieldType.VARCHAR.name)
-		  value = value.toStr
-      values.set(it.dbName, value)
+      Obj? value := model.typeof.field(fm.name, true).get(model)
+      // fields to serialized
+      if(fm.serialized)
+        value = Buf().writeObj(value).flip.readAllStr
+      // fields to convert with toStr
+      else if(fm.fieldType == Duration# || fm.fieldType == Uri#)
+        value = value.toStr
+      values.set(fm.dbName, value)
     }
     return values
   }
@@ -76,7 +79,7 @@ const class DBModelMapping
     Str pKey := DBUtil.normalizeDBName(tableModel?.primaryKey?.name) ?: DBUtil.normalizeDBName("id")
     fields.each
     {
-      Str size :=  it.dbSize > -1 ? "(${it.dbSize})" : ""
+      Str size :=  it.dbSize.size > 0 ? "(${it.dbSize})" : ""
       Str notNull := it.nullable ? "" : "NOT NULL"
       if(columns.size>0)
         columns.add(", ")
@@ -100,7 +103,7 @@ const class DBModelMapping
 ** Database Column Types enum
 enum class FieldType
 {
-  VARCHAR, BIT, BIGINT, FLOAT, DOUBLE, DATE, TIME, TIMESTAMP, NA
+  VARCHAR, BIT, BIGINT, FLOAT, DECIMAL, DATE, TIME, TIMESTAMP, NA
 }
 
 ** Mapping for a single Field (to a table column)
@@ -110,32 +113,35 @@ const class FieldMapping
   const Str dbName
   const FieldModel? fieldModel
   const Str dbType
-  const Int dbSize
+  const Str dbSize
+  const Type fieldType
   const Bool nullable
+  const Bool serialized
 
   new make(Field f)
   {
     name = f.name
-    nullable = f.typeof.isNullable
+    fieldType = f.typeof
+    nullable = fieldType.isNullable
     fieldModel = f.facet(FieldModel#, false)
-    dbType = getFieldType(f).name
+    dbType = getDbType(f).name
     dbName = fieldModel?.name ?: DBUtil.normalizeDBName(name)
     dbSize = getFieldSize(f)
+    serialized = f.hasFacet(SerializeField#)
   }
 
   ** Get the proper DB column type equivalent for the given Fantom field
-  static FieldType getFieldType(Field f)
+  static FieldType getDbType(Field f)
   {
     if(f.hasFacet(SerializeField#))
       return FieldType.VARCHAR
-
     // TODO: allow DBModel childs ?
     switch(f.type)
     {
       case Bool#:     return FieldType.BIT
       case Int#:      return FieldType.BIGINT
       case Float#:    return FieldType.FLOAT
-      case Decimal#:  return FieldType.DOUBLE
+      case Decimal#:  return FieldType.DECIMAL
       case Str#:      return FieldType.VARCHAR
       case Uri#:      return FieldType.VARCHAR
       case Duration#: return FieldType.VARCHAR
@@ -143,7 +149,7 @@ const class FieldMapping
       case Time#:     return FieldType.TIME
       case DateTime#: return FieldType.TIMESTAMP
       
-      default :       echo("Will not save field $f type: $f.type")
+      default :       echo("Will not save field $f of type: $f.type")
     }
     return FieldType.NA;
   }
@@ -151,19 +157,22 @@ const class FieldMapping
   ** Return the field length  -1(none) for any fields
   ** For Varchar defaults to 80, unless otherwise specified with FieldModel.size
   ** Fields marked with SerializeField are Varchar(2000)
-  static Int getFieldSize(Field f)
+  ** For Decimal it's "28,28"
+  static Str getFieldSize(Field f)
   {
     if(f.hasFacet(SerializeField#))
-      return 2000
+      return "2000"
 
     FieldModel? model := f.facet(FieldModel#, false)
-    Int sz := model?.size ?: 80
+    Str sz := "80"
+    if(model?.size > 0) sz = "$model.size"
     switch(f.type)
     {
       case Str#:      return sz
       case Uri#:      return sz
       case Duration#: return sz
+      case Decimal#:  return "28,28"
     }
-    return -1;
+    return "";
   }
 }

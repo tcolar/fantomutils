@@ -19,14 +19,21 @@ class DBModel
   Int id := -1 // -1 means new
 
   ** "Make"(load) an object from a row in the matching database table.
-  static DBModel loadFromRow(SqlService db, Row row)
+  static DBModel loadFromRow(SqlService db, Type objType, Row row)
   {
-    instance := make
+    instance := objType.make
     mapping := getMapping(db, instance.typeof)
     mapping.fields.each |FieldMapping fm|
     {
       Field? field := instance.typeof.field(fm.name, false)
-      field?.set(instance, row.col(fm.dbName))
+      Obj? val := row.get(row.col(fm.dbName))
+      // fields that where serialized
+      if(fm.serialized)
+        val = (val as Str).in.readObj
+      // fields that where converted with toStr
+      else if(field.type == Duration# || field.type == Uri#)
+        val = (field.type.slot("fromStr") as Method).call(val)
+      field?.set(instance, val)
     }
     return instance
   }
@@ -65,7 +72,7 @@ class DBModel
     Row[] rows := query.run(db)
     if(rows.size == 0)
       return null
-    return loadFromRow(db, rows[0])
+    return loadFromRow(db, query.objType, rows[0])
   }
 
   //** Return the object for the given ID
@@ -81,9 +88,14 @@ class DBModel
   {
     Row[] rows := query.run(db)
     if( ! rows.isEmpty)
-      return loadFromRow(db, rows[0])
+      return loadFromRow(db, query.objType, rows[0])
     // Else, create a new one
     return make
+  }
+
+  static DBModel? findById(SqlService db, Type objType, Int id)
+  {
+    findOne(db, SelectQuery.byId(objType, id))
   }
 
   ** Return a list of objects matching the given query
@@ -92,15 +104,15 @@ class DBModel
     // TODO: Deal with limit, once fantom sql supports it
     Row[] rows := query.run(db)
     DBModel[] objs := [,]
-    rows.each { objs.add(loadFromRow(db, it)) }
+    rows.each { objs.add(loadFromRow(db, query.objType, it)) }
     return objs
   }
 
   ** Get the mapping object for a given model.
   ** Note: this also validates the Table, and create it as needed etc...
-  static DBModelMapping getMapping(SqlService db, Type modelType)
+  static DBModelMapping getMapping(SqlService db, Type objType)
   {
-    DBModelMapping(db, modelType)
+    DBModelMapping(db, objType)
   }
 
   ** Whether this is a new item (not in DB yet)

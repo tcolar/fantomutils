@@ -16,9 +16,12 @@ enum class SqlComp
 ** Note: Methods need to be called in the correct Sql order.
 class SelectQuery : ConditionalQuery
 {
-  new make(Type dbModel, Str selectWhat := "*")
+  Type objType
+
+  new make(Type objType, Str selectWhat := "*")
   {
-    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    this.objType = objType;
+    Str tableName := DBUtil.normalizeDBName(objType.name)
     appendToSql("SELECT $selectWhat FROM $tableName ");
   }
 
@@ -32,15 +35,21 @@ class SelectQuery : ConditionalQuery
   {
     appendToSql("ORDER BY $orderBy ");
   }
+
+  ** Build a 'by ID' select query (findById)
+  static SelectQuery byId(Type objType, Int id)
+  {
+    make(objType).where(QueryCond("id", SqlComp.EQUAL, id))
+  }
 }
 
 ** Delete query builder
 class DeleteQuery : ConditionalQuery
 {
-  new make(Type dbModel)
+  new make(Type objType)
   {
     expectResults = false
-    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    Str tableName := DBUtil.normalizeDBName(objType.name)
     appendToSql("DELETE FROM $tableName ");
   }
 }
@@ -50,10 +59,10 @@ class DeleteQuery : ConditionalQuery
 class InsertQuery : QueryBase
 {
 
-  new make(Type dbModel, Str:Obj? values)
+  new make(Type objType, Str:Obj? values)
   {
     expectResults = false
-    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    Str tableName := DBUtil.normalizeDBName(objType.name)
     colStr := StrBuf()
     valStr := StrBuf()
     values.each |val, key|
@@ -75,10 +84,10 @@ class InsertQuery : QueryBase
 class UpdateQuery : ConditionalQuery
 {
 
-  new make(Type dbModel, Str:Obj? values)
+  new make(Type objType, Str:Obj? values)
   {
     expectResults = false
-    Str tableName := DBUtil.normalizeDBName(dbModel.name)
+    Str tableName := DBUtil.normalizeDBName(objType.name)
     setStr := StrBuf()
     values.each |val, key|
     {

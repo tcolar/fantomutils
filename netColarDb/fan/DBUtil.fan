@@ -11,6 +11,9 @@ using sql
 **
 class DBUtil
 {
+
+  const static Str counterTable := "__net_colar_db_cpt"
+
   ** Normalize from Camel case (Fantom Type) into db friendly format : lower case, underscore separated
   ** Examples: "userSettings" -> "user_settings"
   static Str? normalizeDBName(Str? name)
@@ -41,7 +44,8 @@ class DBUtil
 
   static Void deleteTable(SqlService db, Str tableName)
   {
-    QueryManager.execute(db, "DROP TABLE $tableName" ,null, true)
+    if(tableExists(db, tableName))
+      QueryManager.execute(db, "DROP TABLE $tableName" ,null, true)
   }
 
   static Void createTable(SqlService db, DBModelMapping mapping)
