@@ -37,12 +37,12 @@ class ModelTest : Test
   {
     m1 := ModelA()
     m1.save(db)
-    verify(m1.id != -1, "Checking Unique id created")
+    verify(m1.id == 1, "Checking Unique id created on save")
     m2 := ModelA()
     m2.save(db)
-    verify(m2.id == m1.id+1, "Sequential unique id")
+    verify(m2.id == 2, "Sequential unique id")
 
-    // load saved record and check values
+    // load new copy of saved record and compare values
     ModelA? m1b := DBModel.findById(db, ModelA#, m1.id)
     verify(m1b != null, "Find By ID")
     verify(m1b.id == m1.id, "Find By ID - check same ID")
@@ -53,7 +53,7 @@ class ModelTest : Test
     verify(m1b.myfloat == m1.myfloat, "Find By ID - check myfloat")
     //verify(m1b.mydecimal.compare(m1.mydecimal) == 0, "Find By ID - check mydecimal")
 
-    // update and check value is updated
+    // perform an update and check value are updated
     m1b.myval = 25
     m1b.mybool = false
     idBeforeUpdate := m1b.id
@@ -62,6 +62,18 @@ class ModelTest : Test
     verify(m1c.myval == 25, "Updated value - myval")
     verify(m1c.mybool == false, "Updated value - mybool")
     verify(m1b.id == m1c.id && idBeforeUpdate == m1c.id, "Checking update didn't chnage id")
+
+    // check "delete"
+    m1c.delete(db)
+    verify(m1c.id == -1, "id reset on delete")
+    verifyNull(DBModel.findById(db, ModelA#, m1.id), "Check deleted record is gone")
+    verifyNotNull(DBModel.findById(db, ModelA#, m2.id), "Check other record was not deleted")
+
+    // delete tables
+    DBUtil.deleteTable(db, DBUtil.normalizeDBName(ModelA#.name))
+    DBUtil.deleteTable(db, DBUtil.counterTable)
+    verify( ! DBUtil.tableExists(db, DBUtil.normalizeDBName(ModelA#.name)), "Table deleted")
+    verify( ! DBUtil.tableExists(db, DBUtil.counterTable), "Cpt table deleted")
   }
 }
 
