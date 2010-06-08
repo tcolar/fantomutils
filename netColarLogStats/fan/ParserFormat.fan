@@ -7,10 +7,11 @@
 
 **
 ** ParserFormat
+** Log line formats, according to:
+** `http://publib.boulder.ibm.com/tividd/td/ITWSA/ITWSA_info45/en_US/HTML/guide/c-logs.html`
 **
 class ParserFormat
 {
-	** http://publib.boulder.ibm.com/tividd/td/ITWSA/ITWSA_info45/en_US/HTML/guide/c-logs.html
 	**										   IP/Host	identd	user   Timestamp    Method   Path  Proto   status size referer agent
 	static const Regex NcsaCombined := Regex<|^(\s+)\S+(\s+)\S+(\s+)\S+(\[[^\]]+\])\S+"(\s+)\S+(\s+)\S+(\s+)"\S+(\d+)\S+(\d+)\S+"(.*)"\S+"(.*)"$|>
 }
