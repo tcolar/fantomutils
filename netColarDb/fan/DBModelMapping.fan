@@ -173,6 +173,6 @@ const class FieldMapping
       case Duration#: return sz
       case Decimal#:  return "28,28"
     }
-    return "";
+    return "fdsfdsfdsfds";
   }
 }

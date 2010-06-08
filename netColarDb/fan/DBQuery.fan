@@ -1,4 +1,4 @@
-// To change this License template, choose Tools / Templates
+ // To change this License template, choose Tools / Templates
 // and edit Licenses / FanDefaultLicense.txt
 //
 // History:
