@@ -26,7 +26,7 @@ class Main
 			cpt++
 		}
 		time := DateTime.now - d
-		output := cpt / (time.ticks / 1_000_000_000)
+		output := cpt == 0 ? 0 : cpt / (time.ticks / 1_000_000_000)
 		echo("Parsed $cpt lines in $time -> $output lines / sec")
     }
     
