@@ -26,8 +26,8 @@ class ParserTest : Test
 		verifyEq(line.referer, "-")
 		verifyEq(line.size, 2482259)
 		verifyEq(line.status, 200)
-		// Fails : return GMT-4 - probably a fantom bug ??
-		verifyEq(line.timestamp.toStr, "2010-06-08T01:43:17-04:00 GMT-4")
+		// Note: Olsen format : -0400 means GMT+4 -> weird
+		verifyEq(line.timestamp.toStr, "2010-06-08T01:43:17-04:00 GMT+4")
 		echo(line)
 	}
 }

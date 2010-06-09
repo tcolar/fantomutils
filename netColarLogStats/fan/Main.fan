@@ -15,7 +15,19 @@ class Main
     **
     static Void main()
     {
-        // TODO
+		cpt := 0
+		d := DateTime.now
+        File(`/tmp/colar.log`).in.eachLine |Str line|
+		{
+			try
+				p := ParsedLine(line)
+			catch
+				echo("Failed parsing: $line")
+			cpt++
+		}
+		time := DateTime.now - d
+		output := cpt / (time.ticks / 1_000_000_000)
+		echo("Parsed $cpt lines in $time -> $output lines / sec")
     }
     
 }

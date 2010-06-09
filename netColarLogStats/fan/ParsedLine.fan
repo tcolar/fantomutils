@@ -31,13 +31,14 @@ class ParsedLine
 			host = matcher.group(1)
 			identd = matcher.group(2)
 			user = matcher.group(3)
+			// Note: Olsen format : tz offset of -0400 really means GMT+4 -> weird
 			timestamp = DateTime.fromLocale(matcher.group(4), ParserFormat.NcsaDatetime, TimeZone.cur(), false)
 						?: throw ArgErr("Failed parsing date input: ${matcher.group(4)}")
 			method = matcher.group(5)
 			path = matcher.group(6)
 			proto = matcher.group(7)
 			status = Int.fromStr(matcher.group(8))
-			size = Int.fromStr(matcher.group(9))
+			size = Int.fromStr(matcher.group(9), 10, false) ?: 0
 			referer = matcher.group(10)
 			agent = matcher.group(11)
 		}
