@@ -8,19 +8,19 @@
 **
 ** ParsedLine
 **
-class ParsedLine
+const class ParsedLine
 {
-	Str host := Str.defVal
-	Str identd := Str.defVal
-	Str user := Str.defVal
-	DateTime timestamp := DateTime.defVal
-	Str method := Str.defVal
-	Str path := Str.defVal
-	Str proto := Str.defVal
-	Int status := Int.defVal
-	Int size := Int.defVal
-	Str referer := Str.defVal
-	Str agent := Str.defVal
+	const Str host := Str.defVal
+	const Str identd := Str.defVal
+	const Str user := Str.defVal
+	const DateTime timestamp := DateTime.defVal
+	const Str method := Str.defVal
+	const Str path := Str.defVal
+	const Str proto := Str.defVal
+	const Int status := Int.defVal
+	const Int size := Int.defVal
+	const Str referer := Str.defVal
+	const Str agent := Str.defVal
 
 	** Will throw ArgErr if not parseable.
 	new make(Str data)
