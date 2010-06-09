@@ -22,6 +22,7 @@ class ParsedLine
 	Str referer := Str.defVal
 	Str agent := Str.defVal
 
+	** Will throw ArgErr if not parseable.
 	new make(Str data)
 	{
 		RegexMatcher matcher := ParserFormat.NcsaCombined.matcher(data)
@@ -29,14 +30,16 @@ class ParsedLine
 		{
 			host = matcher.group(1)
 			identd = matcher.group(2)
-			timestamp = DateTime.fromHttpStr(matcher.group(3),false) ?: throw ArgErr("Failed parsing date input: $matcher.group(3)")
-			method = matcher.group(4)
-			path = matcher.group(5)
-			proto = matcher.group(6)
-			status = Int.fromStr(matcher.group(7))
-			size = Int.fromStr(matcher.group(8))
-			referer = matcher.group(9)
-			agent = matcher.group(10)
+			user = matcher.group(3)
+			timestamp = DateTime.fromLocale(matcher.group(4), ParserFormat.NcsaDatetime, TimeZone.cur(), false)
+						?: throw ArgErr("Failed parsing date input: ${matcher.group(4)}")
+			method = matcher.group(5)
+			path = matcher.group(6)
+			proto = matcher.group(7)
+			status = Int.fromStr(matcher.group(8))
+			size = Int.fromStr(matcher.group(9))
+			referer = matcher.group(10)
+			agent = matcher.group(11)
 		}
 		else
 		{
@@ -51,4 +54,5 @@ class ParsedLine
 		   Agent: $agent; Referer: $referer
 		   """
 	}
+
 }
