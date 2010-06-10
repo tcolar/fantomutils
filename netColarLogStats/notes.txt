@@ -1,0 +1,6 @@
+Do everything query based, such as:
+
+count request -> do record count, for all data, no limit {hourly, daily, monthly, yearly}
+daily campaign check -> count unique requests where like 'cid=xyz', for current year, no limit {hourly, daily, monthly}
+top files ->  count unique Files, for all data, limit 50 {daily, monthly, yearly}
+top referers -> count unique referer, per day, for all data, [limit 50 | where cpt > 40] {daily, monthly, yearly}
