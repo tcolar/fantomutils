@@ -30,4 +30,15 @@ class ParserTest : Test
 		verifyEq(line.timestamp.toStr, "2010-06-08T01:43:17-04:00 GMT+4")
 		echo(line)
 	}
+
+	Void testQueries()
+	{
+		task := LogTask
+		{
+			type = TaskType.COUNT_UNIQUE
+			limiterValue = 50
+			target = TaskTarget.URL
+			slices = [TaskGranularity.DAY:TaskSpan.CUR_MONTH]
+		}
+	}
 }
