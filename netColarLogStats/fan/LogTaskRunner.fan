@@ -7,7 +7,7 @@
 using sql
 using netColarDb
 
-** Task Processor mxin
+** Task Processor mixin
 mixin LogProcessor
 {
 	** Called before the first log line is processed
@@ -36,6 +36,7 @@ class LogTaskRunner
 	Void run(SqlService db)
 	{
 		LogProcessor? processor
+		// TODO: Have the TaskType enum return the processor rather than thi swicth here ?
 		switch(task.type)
 		{
 			case TaskType.COUNT:
