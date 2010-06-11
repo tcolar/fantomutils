@@ -82,7 +82,7 @@ class LogTaskRunner
 	}
 }
 
-** Implementation of counter (just count requests)
+** Implementation of counter processor (just count request totals)
 class CountingProcessor : LogProcessor
 {
 	LogTask? task
