@@ -4,12 +4,31 @@
 // History:
 //   Jun 8, 2010 thibautc Creation
 //
+using sql
+using netColarDb
 
 **
 ** ParserTest
 **
 class ParserTest : Test
 {
+  SqlService? db
+
+  override Void setup()
+  {
+    // create con
+    db = SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+    db.open
+    // start with clean sheet
+    DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogServer#.name))
+    DBUtil.deleteTable(db, DBUtil.counterTable)
+  }
+
+  override Void teardown()
+  {
+    db?.close
+  }
+
 	Void testParser()
 	{
 
@@ -33,12 +52,17 @@ class ParserTest : Test
 
 	Void testQueries()
 	{
+		server := LogServer("test")
+		server.save(db)
+		log := LogFile(server.id, `/tmp/colar.log`)
+		log.save(db)
+
 		task := LogTask
 		{
-			type = TaskType.COUNT_UNIQUE
-			limiterValue = 50
-			target = TaskTarget.URL
-			slices = [TaskGranularity.DAY:TaskSpan.CUR_MONTH]
+			serverId = server.id
+			type = TaskType.COUNT
 		}
+
+		LogTaskRunner(task).run(db)
 	}
 }

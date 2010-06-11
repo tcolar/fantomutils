@@ -3,4 +3,9 @@ Do everything query based, such as:
 count request -> do record count, for all data, no limit {hourly, daily, monthly, yearly}
 daily campaign check -> count unique requests where like 'cid=xyz', for current year, no limit {hourly, daily, monthly}
 top files ->  count unique Files, for all data, limit 50 {daily, monthly, yearly}
-top referers -> count unique referer, per day, for all data, [limit 50 | where cpt > 40] {daily, monthly, yearly}
+top referrer -> count unique referrer, per day, for all data, [limit 50 | where cpt > 40] {daily, monthly, yearly}
+
+year, month, week?, day, hour task_name			key						value	vhost ??    last_counted_record_timestamp
+2010   05     -      -    -   Counter			val						5234568	colar.net
+2010   05     1      3    4   Counter			val						2534
+2010   05     -      -    -   Counter_unique	http://www.google.com/	5234568	-

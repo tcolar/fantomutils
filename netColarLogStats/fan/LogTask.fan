@@ -10,10 +10,12 @@
 **
 class LogTask
 {
+	Int serverId
 	TaskType type := TaskType.COUNT
-	TaskGranularity:TaskSpan slices := [:]
+	//TaskGranularity granularity := TaskGranularity.DAY -> maybe this is a 'reporting' option not task
+	//TaskSpan span := TaskSpan.CUR_YEAR -> maybe this is a 'reporting' option not task
 	TaskTarget target := TaskTarget.URL
-	Int limiter := -1
+	//Int limiter := -1 -> maybe this is a 'reporting' option not task
 	TaskFilter[] filters := [,]
 	// DateTime lastRun
 }
