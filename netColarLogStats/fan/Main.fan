@@ -7,6 +7,7 @@
 using fwt
 using netColarDb
 using sql
+using gfx
 
 **
 ** Main
@@ -25,8 +26,6 @@ class Main
 
 class LogWindow : Window
 {
-  Table table
-
   new make() : super(null, null)
   {
 	// temporary testing code, relies on data entered in db by test:ParserTest for now
@@ -41,8 +40,8 @@ class LogWindow : Window
 					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
 					.orderBy("time")
 	rows := LogStatRecord.findAllRows(db, query)
-    table = Table { model = LogDataTableModel(rows, "time", "value") }
-    content = table
+    //table = Table { model = LogDataTableModel(rows, "time", "value") }
+    content = LineGraphRenderer().render(LogDataTableModel(rows, "time", "value"), Size(400, 400))
 	db.close()
   }
 
