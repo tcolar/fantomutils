@@ -105,13 +105,20 @@ class DBModel
   ** Return a list of objects matching the given query
   static DBModel[] findAll(SqlService db, SelectQuery query, Int limit := -1)
   {
+	rows := findAllRows(db, query, limit)
+    DBModel[] objs := [,]
+    rows.each { objs.add(loadFromRow(db, query.objType, it)) }
+    return objs
+  }
+
+  ** Return a list of 'plain' DB rows matching the given query
+  static Row[] findAllRows(SqlService db, SelectQuery query, Int limit := -1)
+  {
 	// call to getMapping to create the table if needed
     getMapping(db, query.objType)
     // TODO: Deal with limit, once fantom sql supports it
     Row[] rows := query.run(db)
-    DBModel[] objs := [,]
-    rows.each { objs.add(loadFromRow(db, query.objType, it)) }
-    return objs
+    return rows
   }
 
   ** Get the mapping object for a given model.
