@@ -7,6 +7,7 @@
 
 **
 ** ParsedLine
+** Data holder for a parsed log line data
 **
 const class ParsedLine
 {

@@ -21,6 +21,8 @@ class ParserTest : Test
     db.open
     // start with clean sheet
     DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogServer#.name))
+    DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogFile#.name))
+    DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogStatRecord#.name))
     DBUtil.deleteTable(db, DBUtil.counterTable)
   }
 
@@ -52,13 +54,14 @@ class ParserTest : Test
 
 	Void testQueries()
 	{
-		server := LogServer("test")
+		server := LogServer{serverName = "test"}
 		server.save(db)
-		log := LogFile(server.id, `/tmp/colar.log`)
+		log := LogFile{serverId = server.id; path = `/tmp/colar.log`}
 		log.save(db)
 
 		task := LogTask
 		{
+			uniqueName = "TestCounter"
 			serverId = server.id
 			type = TaskType.COUNT
 		}

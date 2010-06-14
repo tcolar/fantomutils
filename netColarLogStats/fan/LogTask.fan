@@ -11,6 +11,7 @@
 class LogTask
 {
 	Int serverId
+	Str uniqueName := Str.defVal// TODO : deal with uniqueness
 	TaskType type := TaskType.COUNT
 	//TaskGranularity granularity := TaskGranularity.DAY -> maybe this is a 'reporting' option not task
 	//TaskSpan span := TaskSpan.CUR_YEAR -> maybe this is a 'reporting' option not task
