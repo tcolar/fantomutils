@@ -60,7 +60,7 @@ class DBUtil
   // TODO: Maybe use SqlDialect instead and implement autoincrement for several DB's
   static Int nextVal(SqlService db, Str counterName)
   {
-    //TODO: Useless since DB2 just returns db(this) -> just use db and set it to autocmmit and back as needed
+    //TODO: Useless since DB2 just returns db(this) -> just use db and set it to autocommit and back as needed
     SqlService db2 := db.open
     db2.autoCommit = false
     Int id := 1
@@ -70,15 +70,18 @@ class DBUtil
       if( ! tableExists(db2, counterTable))
       {
         QueryManager.execute(db2, "CREATE TABLE $counterTable (name VARCHAR(80) NOT NULL, val BIGINT NOT NULL)", null, true)
-	    QueryManager.execute(db2, "INSERT INTO $counterTable (val, name) values(1, '$counterName')", null, true)
       }
       Row[] rows := QueryManager.execute(db2, "SELECT * FROM $counterTable WHERE name='$counterName'", null, false)
-      if(! rows.isEmpty)
-      {
-       id = rows[0]->val
+      if(rows.isEmpty)
+      {	// new counter
+		QueryManager.execute(db2, "INSERT INTO $counterTable (val, name) values(2, '$counterName')", null, true)
       }
-      nextId := id + 1
-      QueryManager.execute(db2, "UPDATE $counterTable set val=$nextId WHERE name='$counterName'", null, true)
+	  else
+	  {
+		id = rows[0]->val
+	    nextId := id + 1
+		QueryManager.execute(db2, "UPDATE $counterTable set val=$nextId WHERE name='$counterName'", null, true)
+	  }
       db2.commit
     }
     catch (Err e)

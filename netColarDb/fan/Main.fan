@@ -10,16 +10,5 @@
 **
 class Main : Obj
 {
-    Type objType
-    Str[] list
 
-    **
-    ** Main method
-    **
-    static Void main(Type objType)
-    {
-        // TODO
-        objType.emptyList.each  
-    }
-    
 }

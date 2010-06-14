@@ -65,8 +65,9 @@ const class DBModelMapping
       if(fm.serialized)
         value = Buf().writeObj(value).flip.readAllStr
       // fields to convert with toStr
-      else if(fm.fieldType == Duration# || fm.fieldType == Uri#)
+      else if(fm.fieldType.toNonNullable == Duration# || fm.fieldType.toNonNullable == Uri#)
         value = value.toStr
+	  //echo("Value: $fm.dbName : $value ($value.typeof)   $fm.fieldType.toNonNullable")
       values.set(fm.dbName, value)
     }
     return values
@@ -113,7 +114,7 @@ const class FieldMapping
   const Str dbName
   const FieldModel? fieldModel
   const Str dbType
-  const Str dbSize
+  const Str? dbSize
   const Type fieldType
   const Bool nullable
   const Bool serialized
@@ -121,7 +122,7 @@ const class FieldMapping
   new make(Field f)
   {
     name = f.name
-    fieldType = f.typeof
+    fieldType = f.type
     nullable = fieldType.isNullable
     fieldModel = f.facet(FieldModel#, false)
     dbType = getDbType(f).name
@@ -136,7 +137,7 @@ const class FieldMapping
     if(f.hasFacet(SerializeField#))
       return FieldType.VARCHAR
     // TODO: allow DBModel childs ?
-    switch(f.type)
+    switch(f.type.toNonNullable)
     {
       case Bool#:     return FieldType.BIT
       case Int#:      return FieldType.BIGINT
@@ -166,13 +167,13 @@ const class FieldMapping
     FieldModel? model := f.facet(FieldModel#, false)
     Str sz := "80"
     if(model?.size > 0) sz = "$model.size"
-    switch(f.type)
+    switch(f.type.toNonNullable)
     {
       case Str#:      return sz
       case Uri#:      return sz
       case Duration#: return sz
       case Decimal#:  return "28,28"
     }
-    return "fdsfdsfdsfds";
+    return "";
   }
 }

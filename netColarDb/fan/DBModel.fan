@@ -69,7 +69,9 @@ class DBModel
   ** Return the first match (if any) for the given query
   static DBModel? findOne(SqlService db, SelectQuery query)
   {
-    Row[] rows := query.run(db)
+	// call to getMapping to create the table if needed
+    getMapping(db, query.objType)
+	Row[] rows := query.run(db)
     if(rows.size == 0)
       return null
     return loadFromRow(db, query.objType, rows[0])
@@ -86,11 +88,13 @@ class DBModel
   ** If no match was found, then create a new object
   static DBModel findOrCreateOne(SqlService db, SelectQuery query)
   {
+	// call to getMapping to create the table if needed
+    getMapping(db, query.objType)
     Row[] rows := query.run(db)
     if( ! rows.isEmpty)
       return loadFromRow(db, query.objType, rows[0])
     // Else, create a new one
-    return make
+    return query.objType.make
   }
 
   static DBModel? findById(SqlService db, Type objType, Int id)
@@ -101,6 +105,8 @@ class DBModel
   ** Return a list of objects matching the given query
   static DBModel[] findAll(SqlService db, SelectQuery query, Int limit := -1)
   {
+	// call to getMapping to create the table if needed
+    getMapping(db, query.objType)
     // TODO: Deal with limit, once fantom sql supports it
     Row[] rows := query.run(db)
     DBModel[] objs := [,]
