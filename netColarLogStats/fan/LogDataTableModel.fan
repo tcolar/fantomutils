@@ -13,19 +13,23 @@ using sql
 **
 class LogDataTableModel : TableModel
 {
-  Str:Int data := [:] {ordered = true}
+  Str title := ""
   // If null, then will be based on DB table column names
-	Str? keyHeader
-	Str? valHeader
+  Str? keyHeader := ""
+  Str? valHeader := ""
+  ** This can be set to use a cutsom formatter on the key display
+  ** This is what is displayed as the horizontal scale on a graph
+  |Str->Str|? keyTextFormater
 
-  new make(Row[] rows, Str keyCol, Str valCol, |Str->Str|? keyFormater := null)
+  internal Str:Int data := [:] {ordered = true}
+
+  new make(Row[] rows, Str keyCol, Str valCol)
   {
 	rows.each |Row row|
 	{
 		keyHeader = keyHeader ?: row.col(keyCol).name
 		valHeader = valHeader ?: row.col(valCol).name
 		Str key := row.get(row.col(keyCol)).toStr
-		if(keyFormater!=null) key = keyFormater.call(key)
 		Int val := row.get(row.col(valCol))
 		data.set(key, val)
 	}
@@ -35,5 +39,8 @@ class LogDataTableModel : TableModel
   override Int numCols() { 2 }
   override Str header(Int col) { col==0 ? keyHeader : valHeader }
   override Str text(Int col, Int row){ col==0 ? data.keys.get(row).toStr : data.vals.get(row).toStr }
+
   Int getValue(Str key) {data[key]}
+
+  Str getFormatedKeyText(Str key) {keyTextFormater==null ? key : keyTextFormater.call(key)}
 }

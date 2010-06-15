@@ -29,24 +29,66 @@ class LogWindow : Window
   new make() : super(null, null)
   {
 	// temporary testing code, relies on data entered in db by test:ParserTest for now
-
     SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
     db.open
 
+    content = GridPane
+	{
+		LineGraphRenderer().render(model1(db), Size(800, 200)),
+		LineGraphRenderer().render(model2(db), Size(800, 200)),
+		LineGraphRenderer().render(model3(db), Size(800, 200)),
+	}
+	db.close()
+  }
+
+  LogDataTableModel model1(SqlService db)
+  {
 	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
-					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2010-06-13 00:00:00"))
-					.where(QueryCond("time", SqlComp.LOWER, "2010-06-14 00:00:00"))
-					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.HOUR.name))
+					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-04-00 00:00:00"))
+					.where(QueryCond("time", SqlComp.LOWER, "2007-05-00 00:00:00"))
+					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.DAY.name))
 					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
 					.orderBy("time")
 	rows := LogStatRecord.findAllRows(db, query)
-    //table = Table { model = LogDataTableModel(rows, "time", "value") }
-    content = LineGraphRenderer().render(LogDataTableModel(rows, "time", "value"), Size(400, 400))
-	db.close()
+
+	formater := |Str str -> Str| {DateTime.fromStr(str).day.toStr}
+	model := LogDataTableModel(rows, "time", "value"){it.title = "Daily Hits for 04 2007"; keyTextFormater = formater}
+	return model
+  }
+
+  LogDataTableModel model2(SqlService db)
+  {
+	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
+					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-01-01 00:00:00"))
+					.where(QueryCond("time", SqlComp.LOWER, "2008-01-01 00:00:00"))
+					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.DAY.name))
+					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
+					.orderBy("time")
+	rows := LogStatRecord.findAllRows(db, query)
+
+	formater := |Str str -> Str| {DateTime.fromStr(str).dayOfYear.toStr}
+	model := LogDataTableModel(rows, "time", "value") {it.title = "Daily Hits for 2007"; keyTextFormater = formater}
+	return model
+  }
+
+  LogDataTableModel model3(SqlService db)
+  {
+	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
+					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-01-01 00:00:00"))
+					.where(QueryCond("time", SqlComp.LOWER, "2008-01-01 00:00:00"))
+					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.MONTH.name))
+					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
+					.orderBy("time")
+	rows := LogStatRecord.findAllRows(db, query)
+
+	formater := |Str str -> Str| {DateTime.fromStr(str).month.toStr}
+	model := LogDataTableModel(rows, "time", "value") {it.title = "Monthly Hits for 2007"; keyTextFormater = formater}
+	return model
   }
 
   Void main()
   {
+	size = Size(600, 600)
     open
   }
 }

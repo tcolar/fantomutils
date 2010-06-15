@@ -69,7 +69,7 @@ class LogTaskRunner
 						}
 						catch(ArgErr e)
 						{
-							echo("Failed to parse: $line")
+							echo("Failed to parse: $line $e")
 						}
 					}
 					i++

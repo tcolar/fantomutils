@@ -35,6 +35,7 @@ class ParserTest : Test
 	{
 
 		Str data := Str<|89.216.33.172 - - [08/Jun/2010:01:43:17 -0400] "GET /fantomide/plugin/6.8/net-colar-netbeans-fan.nbm HTTP/1.1" 200 2482259 "-" "Java/1.6.0_21-ea"|>
+		//Str data := Str<|194.206.212.1 - - [10/Feb/2006:17:50:49 -0800] "GET /photos/album12/plot_maison.thumb.jpg HTTP/1.1" 200 6498 "http://www.colar.net/gallery/search.php" "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"|>
 		ParsedLine? line := ParsedLine(data)
 		verifyNotNull(line, "Line matched")
 		verifyEq(line.agent, "Java/1.6.0_21-ea")
@@ -56,7 +57,7 @@ class ParserTest : Test
 	{
 		server := LogServer{serverName = "test"}
 		server.save(db)
-		log := LogFile{serverId = server.id; path = `/tmp/colar.log`}
+		log := LogFile{serverId = server.id; path = `/home/thibautc/colar.log`}
 		log.save(db)
 
 		task := LogTask
