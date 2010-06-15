@@ -45,6 +45,7 @@ class LGCanvas : Canvas
 		graphW := w - 40 // 30 For vertical scale (value), 10 for padding on right
 		graphH := h - 30 // 15 for title, 15 for Horizontal scale
 		hQuart := graphH / 5
+		g.antialias = true
 		// title
 		g.font = Font.fromStr("bold 8pt Times Roman")
 		g.drawText(data.title, w - 10 - g.font.width(data.title), 1)
@@ -82,7 +83,6 @@ class LGCanvas : Canvas
 			cpt++
 		}
 		// Plot the data
-		g.antialias = true
 		g.brush =  Color.makeRgb(0xFF, 0x66, 0x66)
 		Point? prev
 		cpt = 0
