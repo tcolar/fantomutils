@@ -34,9 +34,25 @@ class LogWindow : Window
 
     content = GridPane
 	{
-		LineGraphRenderer().render(model1(db), Size(800, 200)),
-		LineGraphRenderer().render(model2(db), Size(800, 200)),
-		LineGraphRenderer().render(model3(db), Size(800, 200)),
+		GridPane
+		{
+			numCols = 2; 
+			LineGraphRenderer(model1(db), Size(400, 200)),
+			HistogramRenderer(model1(db), Size(400, 200)),
+		},
+		GridPane
+		{
+			numCols = 2;
+			LineGraphRenderer(model2(db), Size(400, 200)),
+			HistogramRenderer(model2(db), Size(400, 200)),
+		},
+		GridPane
+		{
+			numCols = 3;
+			LineGraphRenderer(model3(db), Size(300, 200)),
+			HistogramRenderer(model3(db), Size(300, 200)),
+			PieGraphRenderer(model3(db), Size(200, 200)),
+		},
 	}
 	db.close()
   }

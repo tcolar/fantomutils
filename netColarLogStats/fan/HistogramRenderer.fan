@@ -2,17 +2,18 @@
 // and edit Licenses / FanDefaultLicense.txt
 //
 // History:
-//   Jun 14, 2010 thibautc Creation
+//   Jun 16, 2010 thibautc Creation
 //
+
 using fwt
 using gfx
 
 **
-** LineGraphRenderer
-** Render the data as a line graph
+** HistogramRenderer
 **
-class LineGraphRenderer : GraphBaseRenderer
+class HistogramRenderer : GraphBaseRenderer
 {
+
 	new make(LogDataTableModel dataModel, Size sz)
 	{
 		this.dataModel = dataModel
@@ -25,42 +26,38 @@ class LineGraphRenderer : GraphBaseRenderer
 	override Void onPaint(Graphics g)
 	{
 		baseScale := 5
+
 		max := maxDataVal(dataModel.data)
 		nbVals := dataModel.data.size
 		fullScale := getFullScale(baseScale)
-
-		// draw base graph
+		// draw base
 		drawGraphBase(g, baseScale)
-		interval := (graphSize.w - 1).toFloat / (nbVals - 1).toFloat
 		// Add data keys (if their is enough room)
+		interval := (graphSize.w - 1).toFloat / nbVals.toFloat
 		cpt := 0
 		lastX := 0
 		g.pen =  Pen { width = 2 }
 		dataModel.data.each |Int val, Str key|
 		{
 			key = dataModel.getFormatedKeyText(key)
-			lx := (30.toFloat + interval*cpt.toFloat).toInt
-			if(lastX < lx -12)
+			lx := (31.toFloat + interval*cpt.toFloat + interval/2f - g.font.width(key).toFloat/2f).toInt
+			if(lastX < lx - 12)
 			{
-				g.drawText(key, lx - (g.font.width(key) / 2), sz.h - 14)
-				lastX = lx - 6 + g.font.width(key)
-				g.drawLine(lx , sz.h - 18, lx, sz.h - 15)
+				g.drawText(key, lx , sz.h - 14)
+				lastX = lx + g.font.width(key)
 			}
 			cpt++
 		}
 		// Plot the data
-		g.brush =  Color.makeRgb(0xFF, 0x66, 0x66)
-		Point? prev
+		ColorSet colors := ColorSet()
 		cpt = 0
 		dataModel.data.each |Int val, Str key|
 		{
-			// Add data points and link them with line
-			p := Point((30.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * val) / fullScale)
-			g.fillOval(p.x-2, p.y-2, 6, 6)
-			if(prev!=null) g.drawLine(p.x, p.y, prev.x, prev.y);
-			prev = p
+			// Add data bars
+			g.brush =  colors.nextColor
+			p := Point((31.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * val) / fullScale)
+			g.fillRect(p.x, p.y, interval.toInt, sz.h - 16 - p.y)
 			cpt++
 		}
 	}
-
 }
