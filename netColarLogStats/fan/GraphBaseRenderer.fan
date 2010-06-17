@@ -10,6 +10,7 @@ using gfx
 **
 ** Abstract base of graph renderers
 **
+@Js
 abstract class GraphBaseRenderer : Canvas
 {
 	** Graph data
@@ -81,17 +82,20 @@ abstract class GraphBaseRenderer : Canvas
 
 ** A set of 'unique' colors
 ** A new color is returned each time nextColor is called
-** ~ 32 different colors returned
+** Number of colors is finite and will eventually roll over
+@Js
 class ColorSet
 {
 	static const Color[] baseColors := [Color.blue, Color.red,
 										Color.green, Color.yellow,
-										Color.purple, Color.orange,
-										Color.gray, Color.black]
+										Color.purple, Color.fromStr("#00FFFF"),
+										Color.fromStr("#000033"), Color.fromStr("#330000"),
+                                        Color.fromStr("#003300"), Color.fromStr("#333300"),
+                                        Color.fromStr("#330033"), Color.fromStr("#003333")]
 	Int cpt := 0
 
 	** Gives a new different color at each call
-	** After the 8 "base" colors have been used, give lighter shades of them by 20% increment
+	** After the "base" colors have been used, give lighter shades of them by 20% increment
 	** Once we got to 80% lighter, start over -> gives a total of 8*4 = 32 "unique" colors
 	Color nextColor()
 	{
@@ -99,7 +103,7 @@ class ColorSet
 		round := cpt / baseColors.size
 		color = color.lighter( round.toFloat * 0.2f )
 		cpt ++
-		// start over if all 32 colors used
+		// start over if all colors used
 		if(cpt >= baseColors.size * 4) cpt = 0
 		return color
 	}

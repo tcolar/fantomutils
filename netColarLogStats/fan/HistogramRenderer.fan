@@ -11,6 +11,7 @@ using gfx
 **
 ** HistogramRenderer
 **
+@Js
 class HistogramRenderer : GraphBaseRenderer
 {
 

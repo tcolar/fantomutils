@@ -11,6 +11,7 @@ using gfx
 ** LineGraphRenderer
 ** Render the data as a line graph
 **
+@Js
 class LineGraphRenderer : GraphBaseRenderer
 {
 	new make(LogDataTableModel dataModel, Size sz)

@@ -11,6 +11,7 @@ using sql
 ** LogDataTableModel
 ** Data to be rendered by a LogDataRenderer
 **
+@Js
 class LogDataTableModel : TableModel
 {
   Str title := ""

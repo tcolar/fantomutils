@@ -24,6 +24,13 @@ class Main
     
 }
 
+/*
+TODO: for Js to work, i probably need to decouple rendering from data retrieval
+maybe have an ajax call like /getData .... that does the sql and return the dataset
+to be used to render the graph
+*/
+
+@Js
 class LogWindow : Window
 {
   new make() : super(null, null)
@@ -37,20 +44,20 @@ class LogWindow : Window
 		GridPane
 		{
 			numCols = 2; 
-			LineGraphRenderer(model1(db), Size(400, 200)),
-			HistogramRenderer(model1(db), Size(400, 200)),
+			HistogramRenderer(model1(db), Size(300, 200)),
+			LineGraphRenderer(model1(db), Size(300, 200)),
 		},
 		GridPane
 		{
 			numCols = 2;
-			LineGraphRenderer(model2(db), Size(400, 200)),
-			HistogramRenderer(model2(db), Size(400, 200)),
+			LineGraphRenderer(model2(db), Size(300, 200)),
+			HistogramRenderer(model2(db), Size(300, 200)),
 		},
 		GridPane
 		{
 			numCols = 3;
-			LineGraphRenderer(model3(db), Size(300, 200)),
-			HistogramRenderer(model3(db), Size(300, 200)),
+			LineGraphRenderer(model3(db), Size(200, 200)),
+			HistogramRenderer(model3(db), Size(200, 200)),
 			PieGraphRenderer(model3(db), Size(200, 200)),
 		},
 	}
@@ -104,7 +111,6 @@ class LogWindow : Window
 
   Void main()
   {
-	size = Size(600, 600)
     open
   }
 }

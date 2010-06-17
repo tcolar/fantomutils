@@ -77,9 +77,8 @@ class PieGraphRenderer : GraphBaseRenderer
 			g.fillRect(startX + graphSize.w + 15 + 1, startYKeys+1, 9, 9)
 			// draw the slice
 			Float arcAngle := val.toFloat / dataTotal * 360f
-			echo("$val : $curAngle / $arcAngle")
 			// I want to go clockwise (negative values)
-			g.fillArc(startX, startY, graphSize.w, graphSize.h, curAngle.toInt, - arcAngle.toInt)
+			g.fillArc(startX, startY, graphSize.w, graphSize.h, curAngle.toInt, - arcAngle.toInt -1)
 			curAngle -= arcAngle
 
 			startYKeys += 15
