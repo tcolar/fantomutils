@@ -19,18 +19,13 @@ class Main
     **
     static Void main()
     {
-		LogWindow().open
+		ServerService().run()
+		//LogWindow().open
     }
     
 }
 
-/*
-TODO: for Js to work, i probably need to decouple rendering from data retrieval
-maybe have an ajax call like /getData .... that does the sql and return the dataset
-to be used to render the graph
-*/
-
-@Js
+** For quick testing
 class LogWindow : Window
 {
   new make() : super(null, null)
@@ -75,7 +70,8 @@ class LogWindow : Window
 	rows := LogStatRecord.findAllRows(db, query)
 
 	formater := |Str str -> Str| {DateTime.fromStr(str).day.toStr}
-	model := LogDataTableModel(rows, "time", "value"){it.title = "Daily Hits for 04 2007"; keyTextFormater = formater}
+	model := LogDataTableModel(){it.title = "Daily Hits for 04 2007"}
+	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
 	return model
   }
 
@@ -90,7 +86,8 @@ class LogWindow : Window
 	rows := LogStatRecord.findAllRows(db, query)
 
 	formater := |Str str -> Str| {DateTime.fromStr(str).dayOfYear.toStr}
-	model := LogDataTableModel(rows, "time", "value") {it.title = "Daily Hits for 2007"; keyTextFormater = formater}
+	model := LogDataTableModel(){it.title = "Daily Hits for 2007"}
+	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
 	return model
   }
 
@@ -105,7 +102,8 @@ class LogWindow : Window
 	rows := LogStatRecord.findAllRows(db, query)
 
 	formater := |Str str -> Str| {DateTime.fromStr(str).month.toStr}
-	model := LogDataTableModel(rows, "time", "value") {it.title = "Monthly Hits for 2007"; keyTextFormater = formater}
+	model := LogDataTableModel(){it.title = "Monthly Hits for 2007"}
+	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
 	return model
   }
 

@@ -39,7 +39,7 @@ class LineGraphRenderer : GraphBaseRenderer
 		g.pen =  Pen { width = 2 }
 		dataModel.data.each |Int val, Str key|
 		{
-			key = dataModel.getFormatedKeyText(key)
+			key = dataModel.formatedKeys[key]
 			lx := (30.toFloat + interval*cpt.toFloat).toInt
 			if(lastX < lx -12)
 			{

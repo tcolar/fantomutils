@@ -37,7 +37,7 @@ class PieGraphRenderer : GraphBaseRenderer
 		// calculate longest key text size (pixels)
 		longestKey = data.keys.reduce(0) |Int r, Str v -> Int| 
 		{
-			w := g.font.width( dataModel.getFormatedKeyText(v) )
+			w := g.font.width( dataModel.formatedKeys[v] )
 			return w > r ? w : r
 		}
 		// size of the "pie"
@@ -72,7 +72,7 @@ class PieGraphRenderer : GraphBaseRenderer
 			// keys / legend
 			g.brush = Color.black
 			g.drawRect(startX + graphSize.w + 15, startYKeys, 10, 10)
-			g.drawText(dataModel.getFormatedKeyText(key), startX + graphSize.w + 15 + 10 + 6, startYKeys)
+			g.drawText(dataModel.formatedKeys[key], startX + graphSize.w + 15 + 10 + 6, startYKeys)
 			g.brush = color
 			g.fillRect(startX + graphSize.w + 15 + 1, startYKeys+1, 9, 9)
 			// draw the slice

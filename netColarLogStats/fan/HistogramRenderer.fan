@@ -40,7 +40,7 @@ class HistogramRenderer : GraphBaseRenderer
 		g.pen =  Pen { width = 2 }
 		dataModel.data.each |Int val, Str key|
 		{
-			key = dataModel.getFormatedKeyText(key)
+			key = dataModel.formatedKeys[key]
 			lx := (31.toFloat + interval*cpt.toFloat + interval/2f - g.font.width(key).toFloat/2f).toInt
 			if(lastX < lx - 12)
 			{

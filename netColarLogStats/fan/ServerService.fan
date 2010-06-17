@@ -9,8 +9,7 @@ using web
 using webmod
 using util
 using fwt
-using netColarDb
-using sql
+using gfx
 
 **
 ** ServerService
@@ -22,29 +21,34 @@ class ServerService : AbstractMain
 
   override Int run()
   {
-    wisp := WispService
+    pipeline := PipelineMod
     {
-      it.port = this.port
-      it.root = ServerMod()
+      // pipeline steps
+      steps =
+      [
+        RouteMod
+        {
+          routes =
+          [
+            "index": ShowIndex(),
+            "pod":   ServerMod(),
+          ]
+        }
+      ]
     }
-    return runServices([wisp])
-  }
 
+    // run WispService
+    return runServices([ WispService { it.port = this.port; root = pipeline } ])
+	}
 }
 
 const class ServerMod : WebMod
 {
   override Void onGet()
   {
-    name := req.modRel.path.first
-    if (name == "pod")
-    {
       File file := ("fan://" + req.uri[1..-1]).toUri.get
       if (!file.exists) { res.sendErr(404); return }
       FileWeblet(file).onService
-    }
-    else
-      ShowScript().onGet
   }
 
   override Void onPost()
@@ -53,9 +57,8 @@ const class ServerMod : WebMod
   }
 }
 
-class ShowScript : Weblet
+const class ShowIndex : WebMod
 {
-  new make() {}
   override Void onGet()
   {
     // write page
@@ -77,11 +80,41 @@ class ShowScript : Weblet
         a { color: #00f; }
         ").styleEnd
       //out.script.w(js).scriptEnd
-      WebUtil.jsMain(out, "netColarLogStats::LogWindow.main")
+      WebUtil.jsMain(out, "netColarLogStats::TestWindow.main")
     out.headEnd
     out.body
     out.bodyEnd
     out.htmlEnd
   }
 
+}
+
+@Js
+class TestWindow : Window
+{
+  ** Dummy test model
+  LogDataTableModel model1 := LogDataTableModel
+					{
+						it.title="Dummy"
+						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april"]
+						data := ["jan":256, "feb":56, "mar":456, "april":128, ]
+					}
+
+  new make() : super(null, null)
+  {
+    content = GridPane
+	{
+		GridPane
+		{
+			HistogramRenderer(model1, Size(300, 200)),
+			LineGraphRenderer(model1, Size(300, 200)),
+			PieGraphRenderer(model1, Size(200, 200)),
+		},
+	}
+  }
+
+  Void main()
+  {
+    open
+  }
 }
