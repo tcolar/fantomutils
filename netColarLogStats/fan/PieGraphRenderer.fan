@@ -10,6 +10,7 @@ using gfx
 **
 ** PieGraphRenderer
 **
+@Js
 class PieGraphRenderer : GraphBaseRenderer
 {
 	** Only values representing at least than minPct percentage will be shown (default: 2)

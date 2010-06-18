@@ -19,8 +19,8 @@ class LogDataTableModel : TableModel
 {
   Str title := ""
   // If null, then will be based on DB table column names
-  Str? keyHeader := ""
-  Str? valHeader := ""
+  Str keyHeader := ""
+  Str valHeader := ""
   internal Str:Str formatedKeys  := [:]
   internal Str:Int data := [:] {ordered = true}
 
@@ -44,8 +44,8 @@ class LogDataTableModelHelper
   {
 	rows.each |Row row|
 	{
-		if(model.keyHeader == null ) model.keyHeader = row.col(keyCol).name
-		if(model.valHeader == null ) model.valHeader = row.col(valCol).name
+		if(model.keyHeader.isEmpty) model.keyHeader = row.col(keyCol).name
+		if(model.valHeader.isEmpty) model.valHeader = row.col(valCol).name
 		key := row.get(row.col(keyCol)).toStr
 		val := row.get(row.col(valCol))
 		model.data.set(key, val)

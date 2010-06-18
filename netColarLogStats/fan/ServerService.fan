@@ -80,9 +80,10 @@ const class ShowIndex : WebMod
         a { color: #00f; }
         ").styleEnd
       //out.script.w(js).scriptEnd
-      WebUtil.jsMain(out, "netColarLogStats::TestWindow.main")
+      WebUtil.jsMain(out, "netColarLogStats::TestWindow")
     out.headEnd
     out.body
+    out.h2.w("hello").h2End
     out.bodyEnd
     out.htmlEnd
   }
@@ -92,18 +93,19 @@ const class ShowIndex : WebMod
 @Js
 class TestWindow : Window
 {
-  ** Dummy test model
+  ** Dummy test data
   LogDataTableModel model1 := LogDataTableModel
 					{
 						it.title="Dummy"
 						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april"]
-						data := ["jan":256, "feb":56, "mar":456, "april":128, ]
+						data = ["jan":1256, "feb":756, "mar":3456, "april":1728]
 					}
 
   new make() : super(null, null)
   {
     content = GridPane
 	{
+        //numCols = 3 -> causes Uncaught sys::IndexErr: 1 sys.js:2705
 		GridPane
 		{
 			HistogramRenderer(model1, Size(300, 200)),
