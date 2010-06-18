@@ -19,47 +19,17 @@ class Main
     **
     static Void main()
     {
+		SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+		db.open
+		model1(db)
+		db.close
+
 		ServerService().run()
-		//LogWindow().open
+		//TestWindow().open
     }
-    
-}
 
-** For quick testing
-class LogWindow : Window
-{
-  new make() : super(null, null)
-  {
-	// temporary testing code, relies on data entered in db by test:ParserTest for now
-    SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
-    db.open
-
-    content = GridPane
-	{
-		GridPane
-		{
-			numCols = 2; 
-			HistogramRenderer(model1(db), Size(300, 200)),
-			LineGraphRenderer(model1(db), Size(300, 200)),
-		},
-		GridPane
-		{
-			numCols = 2;
-			LineGraphRenderer(model2(db), Size(300, 200)),
-			HistogramRenderer(model2(db), Size(300, 200)),
-		},
-		GridPane
-		{
-			numCols = 3;
-			LineGraphRenderer(model3(db), Size(200, 200)),
-			HistogramRenderer(model3(db), Size(200, 200)),
-			PieGraphRenderer(model3(db), Size(200, 200)),
-		},
-	}
-	db.close()
-  }
-
-  LogDataTableModel model1(SqlService db)
+// for testing
+  static LogDataTableModel model1(SqlService db)
   {
 	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
 					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-04-00 00:00:00"))
@@ -67,48 +37,16 @@ class LogWindow : Window
 					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.DAY.name))
 					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
 					.orderBy("time")
+
 	rows := LogStatRecord.findAllRows(db, query)
 
 	formater := |Str str -> Str| {DateTime.fromStr(str).day.toStr}
 	model := LogDataTableModel(){it.title = "Daily Hits for 04 2007"}
 	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
+
+	// test serialized data
+	Env.cur.out.writeObj(model)
+
 	return model
-  }
-
-  LogDataTableModel model2(SqlService db)
-  {
-	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
-					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-01-01 00:00:00"))
-					.where(QueryCond("time", SqlComp.LOWER, "2008-01-01 00:00:00"))
-					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.DAY.name))
-					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
-					.orderBy("time")
-	rows := LogStatRecord.findAllRows(db, query)
-
-	formater := |Str str -> Str| {DateTime.fromStr(str).dayOfYear.toStr}
-	model := LogDataTableModel(){it.title = "Daily Hits for 2007"}
-	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
-	return model
-  }
-
-  LogDataTableModel model3(SqlService db)
-  {
-	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
-					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-01-01 00:00:00"))
-					.where(QueryCond("time", SqlComp.LOWER, "2008-01-01 00:00:00"))
-					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.MONTH.name))
-					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
-					.orderBy("time")
-	rows := LogStatRecord.findAllRows(db, query)
-
-	formater := |Str str -> Str| {DateTime.fromStr(str).month.toStr}
-	model := LogDataTableModel(){it.title = "Monthly Hits for 2007"}
-	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
-	return model
-  }
-
-  Void main()
-  {
-    open
   }
 }

@@ -31,6 +31,9 @@ class PieGraphRenderer : GraphBaseRenderer
 
 	override Void onPaint(Graphics g)
 	{
+		g.pen =  Pen { width = 1 }
+		g.brush = Color.black
+
 		dataTotal := dataTotal(data).toFloat
 
 		g.antialias = true

@@ -79,14 +79,6 @@ const class ShowIndex : WebMod
        "body { font: 10pt Arial; }
         a { color: #00f; }
         ").styleEnd
-      //out.script.w(js).scriptEnd
-  /*LogDataTableModel model1 := LogDataTableModel
-					{
-						it.title="Dummy"
-						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april"]
-						data = ["jan":1256, "feb":756, "mar":3456, "april":1728]
-					}
-WebUtil.jsMain(out, HistogramRenderer(model1, Size(300, 200)))*/
       WebUtil.jsMain(out, "netColarLogStats::TestWindow")
     out.headEnd
     out.body
@@ -103,23 +95,14 @@ class TestWindow : Window
   ** Dummy test data
   LogDataTableModel model1 := LogDataTableModel
 					{
-						it.title="Dummy"
-						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april"]
-						data = ["jan":1256, "feb":756, "mar":3456, "april":1728]
+						it.title="Stats"
+						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april", "may":"May"]
+						data = ["jan":1256, "feb":756, "mar":3456, "april":1728, "may":2120]
 					}
 
   new make() : super(null, null)
   {
-    content = GridPane
-	{
-		GridPane
-		{
-            numCols = 3 //-> causes Uncaught sys::IndexErr: 1 sys.js:2705
-			HistogramRenderer(model1, Size(300, 200)),
-			LineGraphRenderer(model1, Size(300, 200)),
-			PieGraphRenderer(model1, Size(300, 200)),
-		},
-	}
+    content = GraphPane(model1, Size(500, 250))
   }
 
   Void main()

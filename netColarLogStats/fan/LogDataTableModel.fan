@@ -36,7 +36,6 @@ class LogDataTableModel : TableModel
 **
 class LogDataTableModelHelper
 {
-
   ** Set the model data from a set of SQL rows
   ** KeyFormater can be set to use a custom formatter on the key display
   ** This is what is displayed as the horizontal scale on a graph
@@ -54,4 +53,5 @@ class LogDataTableModelHelper
 	}
 	return model
   }
+
 }

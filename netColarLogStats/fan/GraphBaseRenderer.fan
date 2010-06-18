@@ -27,6 +27,8 @@ abstract class GraphBaseRenderer : Canvas
 	** Can be used by subclasses that want to (Ex: HistogramGraph, lineGraph)
 	Void drawGraphBase(Graphics g, Int baseScale)
 	{
+		g.pen =  Pen { width = 1 }
+		g.brush = Color.black
 		scale := getFullScale(baseScale)
 		hQuart := graphSize.h / 5
 		g.antialias = true
@@ -50,6 +52,11 @@ abstract class GraphBaseRenderer : Canvas
 		}
 	}
 
+	override Size prefSize(Hints hints := Hints.defVal)
+	{
+		return sz
+	}
+
 	Str getScaleTxt(Int val)
 	{
 		if(val >= 1_000_000)
@@ -57,11 +64,6 @@ abstract class GraphBaseRenderer : Canvas
 		if(val >= 1_000)
 			return "${val/1_000}K"
 		return val.toStr
-	}
-
-	override Size prefSize(Hints hints := Hints.defVal)
-	{
-		return sz
 	}
 
 	Int getFullScale(Int baseScale)
@@ -110,4 +112,65 @@ class ColorSet
 		if(cpt >= baseColors.size * 4) cpt = 0
 		return color
 	}
+}
+
+** A panel that shows a stat graph and let you switch between:
+** Raw data, Line chart, Histogram, Pie chart
+@Js
+class GraphPane : ContentPane
+{
+  LogDataTableModel dataModel
+  Size sz
+  internal Widget graph
+  internal GridPane buttons
+
+  new make(LogDataTableModel dataModel, Size sz) : super()
+  {
+	this.sz = sz
+	this.dataModel = dataModel
+	buttons = getButtons
+	graph = LineGraphRenderer(dataModel, sz)
+	updateGraph
+  }
+
+  Void updateGraph()
+  {
+	dataModel.title = "The Updated Stats"
+	content?.removeAll
+	content = GridPane
+	{
+		Table { model = dataModel },
+		buttons,
+		graph,
+	}
+	relayout
+  }
+
+  GridPane getButtons()
+  {
+	return GridPane
+	{
+		numCols = 4
+		Button
+		{
+			text = "LineGraph"
+			onAction.add {graph = LineGraphRenderer(dataModel, sz); updateGraph}
+		},
+		Button
+		{
+			text = "Histogram"
+			onAction.add {graph = HistogramRenderer(dataModel, sz); updateGraph}
+		},
+		Button
+		{
+			text = "Pie"
+			onAction.add {graph = PieGraphRenderer(dataModel, sz); updateGraph}
+		},
+		Button
+		{
+			text = "Raw"
+			onAction.add {graph = Table { model = dataModel }; updateGraph}
+		},
+	}
+  }
 }
