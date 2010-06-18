@@ -16,14 +16,21 @@ class Main
   {
     Window
     {
-      size = Size(300, 300)
-	  InsetPane
-	  {
-		ScrollPane
-		{
-		  Label{text = "fdsfdsfsdfdsfdfsdfdsfdsfdsfdsfdssfdsfsfsdfdsfdsfdsfdsfdsfdsfdsfdsf"},
-		},
-	  },
+      size = Size(800,600)
+      GridPane
+      {
+        numCols = 1
+        expandCol = 0
+        uniformCols = true
+        halignCells = Halign.fill
+
+        EdgePane
+        {
+          left = Label{text = "Hello"}
+          right = Label{text = "Bye Bye"}
+        },
+        TitleBar{text="hello dude"},
+      },
     }.open
   }
 }

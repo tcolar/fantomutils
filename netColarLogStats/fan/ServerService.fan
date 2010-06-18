@@ -105,9 +105,9 @@ class TestWindow : Window
   {
     content = GridPane
 	{
-        //numCols = 3 -> causes Uncaught sys::IndexErr: 1 sys.js:2705
 		GridPane
 		{
+            numCols = 3 //-> causes Uncaught sys::IndexErr: 1 sys.js:2705
 			HistogramRenderer(model1, Size(300, 200)),
 			LineGraphRenderer(model1, Size(300, 200)),
 			PieGraphRenderer(model1, Size(200, 200)),
