@@ -14,8 +14,8 @@ class LogStatQueries
   static SelectQuery ThisMonthDailyHits()
   {
 	now := DateTime.now
-	start := DateTime(now.year, now.month.ordinal, 0, 0, 0)
-	end := DateTime(now.year, now.month.ordinal +1 , 0, 0, 0)
+	start := DateTime(now.year, now.month, 0, 0, 0)
+	end := DateTime(now.year, now.month.increment , 0, 0, 0)
 	return counterQuery(1, "counter", TaskGranularity.MONTH, start, end)
   }
 
