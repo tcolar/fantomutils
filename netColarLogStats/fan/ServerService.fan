@@ -80,6 +80,13 @@ const class ShowIndex : WebMod
         a { color: #00f; }
         ").styleEnd
       //out.script.w(js).scriptEnd
+  /*LogDataTableModel model1 := LogDataTableModel
+					{
+						it.title="Dummy"
+						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april"]
+						data = ["jan":1256, "feb":756, "mar":3456, "april":1728]
+					}
+WebUtil.jsMain(out, HistogramRenderer(model1, Size(300, 200)))*/
       WebUtil.jsMain(out, "netColarLogStats::TestWindow")
     out.headEnd
     out.body
@@ -110,7 +117,7 @@ class TestWindow : Window
             numCols = 3 //-> causes Uncaught sys::IndexErr: 1 sys.js:2705
 			HistogramRenderer(model1, Size(300, 200)),
 			LineGraphRenderer(model1, Size(300, 200)),
-			PieGraphRenderer(model1, Size(200, 200)),
+			PieGraphRenderer(model1, Size(300, 200)),
 		},
 	}
   }

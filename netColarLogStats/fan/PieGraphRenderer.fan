@@ -20,6 +20,7 @@ class PieGraphRenderer : GraphBaseRenderer
 
 	internal Str:Int data
 	internal Int longestKey
+	internal Bool hasOthers := false
 
 	new make(LogDataTableModel dataModel, Size sz)
 	{
@@ -33,12 +34,15 @@ class PieGraphRenderer : GraphBaseRenderer
 		dataTotal := dataTotal(data).toFloat
 
 		g.antialias = true
-		g.font = Font.fromStr("8pt Times Roman")
+		g.font = font
 
 		// calculate longest key text size (pixels)
-		longestKey = data.keys.reduce(0) |Int r, Str v -> Int| 
+		longestKey = data.keys.reduce(0) |Int r, Str k -> Int|
 		{
-			w := g.font.width( dataModel.formatedKeys[v] )
+			pct := data[k].toFloat * 100f / dataTotal
+			pctStr := pct.toLocale("0.00")
+			txt := "${dataModel.formatedKeys[k]} - ${pctStr}%"
+			w := g.font.width( txt )
 			return w > r ? w : r
 		}
 		// size of the "pie"
@@ -50,22 +54,20 @@ class PieGraphRenderer : GraphBaseRenderer
 		totalSize := Size(smallest + 15 + longestKey + 10 + 6, smallest)
 
 		// title
-		g.font = Font.fromStr("bold 8pt Times Roman")
+		g.font = fontBold
 		g.drawText(dataModel.title, sz.w / 2 - g.font.width(dataModel.title) / 2, 1)
 
-		g.font = Font.fromStr("8pt Times Roman")
+		g.font = font
 		ColorSet colors := ColorSet()
 		// I want to start at "noon" on the pie chart
-		curAngle := 90f
+		curAngle := 180f
 		// We will center the pie and legend in te middle of the full graph
 		startX := sz.w /2 - totalSize.w / 2
 		startY := sz.h /2 - totalSize.h / 2
-		startYKeys := sz.h /2 - ( (data.size+1) * 15) / 2
+		startYKeys := sz.h /2 - ( (data.size + (hasOthers?1:0)) * 15) / 2
 		// empty pie
 		g.brush = Color.white
 		g.fillOval(startX, startY, graphSize.w, graphSize.h)
-		g.brush = Color.black
-		g.drawOval(startX, startY, graphSize.w, graphSize.h)
 		// pie data
 		data.each |val, key|
 		{
@@ -73,37 +75,67 @@ class PieGraphRenderer : GraphBaseRenderer
 			// keys / legend
 			g.brush = Color.black
 			g.drawRect(startX + graphSize.w + 15, startYKeys, 10, 10)
-			g.drawText(dataModel.formatedKeys[key], startX + graphSize.w + 15 + 10 + 6, startYKeys)
+			pct := val.toFloat * 100f / dataTotal
+			pctStr := pct.toLocale("0.00")
+			txt := "${dataModel.formatedKeys[key]} - ${pctStr}%"
+			g.drawText(txt, startX + graphSize.w + 15 + 10 + 6, startYKeys)
 			g.brush = color
 			g.fillRect(startX + graphSize.w + 15 + 1, startYKeys+1, 9, 9)
 			// draw the slice
 			Float arcAngle := val.toFloat / dataTotal * 360f
 			// I want to go clockwise (negative values)
-			g.fillArc(startX, startY, graphSize.w, graphSize.h, curAngle.toInt, - arcAngle.toInt -1)
+			//g.fillArc(startX, startY, graphSize.w, graphSize.h, curAngle.toInt, - arcAngle.toInt -1)
+			radius := (graphSize.w / 2)
+			midX := startX + graphSize.w/2 + 1
+			midY := startY + graphSize.h/2 + 1
+			fillArc(g, midX, midY, radius, curAngle, arcAngle)
+
 			curAngle -= arcAngle
 
 			startYKeys += 15
 		}
-		// "Others" legend
-		g.brush = Color.white
-		g.fillRect(startX + graphSize.w + 15, startYKeys, 10, 10)
+		if(hasOthers)
+		{
+			// "Others" legend
+			g.brush = Color.white
+			g.fillRect(startX + graphSize.w + 15, startYKeys, 10, 10)
+			g.brush = Color.black
+			g.drawRect(startX + graphSize.w + 15, startYKeys, 10, 10)
+			g.drawText("Others", startX + graphSize.w + 15 + 10 + 6, startYKeys)
+		}
+		// Pie border - draw it last as it helps the appearance of my 'fake' fillArc impl.
 		g.brush = Color.black
-		g.drawRect(startX + graphSize.w + 15, startYKeys, 10, 10)
-		g.drawText("Others", startX + graphSize.w + 15 + 10 + 6, startYKeys)
-
+		g.pen =  Pen { width = 2 }
+		g.drawOval(startX, startY, graphSize.w, graphSize.h)
 	}
+
+	** Temporary impl. of fillArc as Fantrom does not have that impl. yet in javascript
+	** Not very good, but OK
+	internal Void fillArc(Graphics g, Int midX, Int midY, Int radius, Float startAngle, Float arcAngle)
+	{
+		points := Point[,]
+		points.add(Point(midX, midY))
+		(startAngle.toInt .. (startAngle - arcAngle - 1f).toInt).each
+		{
+			rad := it.toFloat * Float.pi / 180f
+			points.add(Point((rad.sin * radius.toFloat).toInt + midX, (rad.cos * radius.toFloat).toInt + midY))
+		}
+		g.fillPolygon(points)
+	}
+
 
 	internal Str:Int filterData(Str:Int data)
 	{
 		Int max := maxDataVal(data)
 		// Order from high to low
-		Str:Int newData := [:] {ordered = true}
+		Str:Int newData := [:] { ordered = true }
 		// Only keep value above a certain %
 		cpt := 0
+		// filter
 		data.each |i, s|
 		{
 			if( i * max / 100 < minPct || newData.size == maxSlices)
-				return
+				{hasOthers = true; return}
 			newData.set(s, i)
 		}
 		return newData

@@ -20,6 +20,9 @@ abstract class GraphBaseRenderer : Canvas
 	** Size of Graph (data area)
 	Size? graphSize
 
+	static const Font font := Font.fromStr("12pt Lucida Sans Unicode")
+	static const Font fontBold := font.toBold
+
 	** Draw the "background" of a x/y type graph (x, y axis with key/values/scale)
 	** Can be used by subclasses that want to (Ex: HistogramGraph, lineGraph)
 	Void drawGraphBase(Graphics g, Int baseScale)
@@ -28,10 +31,10 @@ abstract class GraphBaseRenderer : Canvas
 		hQuart := graphSize.h / 5
 		g.antialias = true
 		// title
-		g.font = Font.fromStr("bold 8pt Times Roman")
+		g.font = fontBold
 		g.drawText(dataModel.title, sz.w - 10 - g.font.width(dataModel.title), 1)
 		// Draw the graph background
-		g.font = Font.fromStr("8pt Times Roman")
+		g.font = font
 		g.pen =  Pen { width = 2 }
 		g.drawLine(30, 15, 30, sz.h -15)
 		g.drawLine(30, sz.h-15, sz.w, sz.h -15)
