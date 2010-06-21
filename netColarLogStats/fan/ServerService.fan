@@ -17,7 +17,7 @@ using gfx
 class ServerService : AbstractMain
 {
   @Opt { help = "http port" }
-  Int port := 8480
+  Int port := 8580
 
   override Int run()
   {

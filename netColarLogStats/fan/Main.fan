@@ -19,10 +19,10 @@ class Main
     **
     static Void main()
     {
-		SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+		/*SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
 		db.open
 		model1(db)
-		db.close
+		db.close*/
 
 		ServerService().run()
 		//TestWindow().open
@@ -45,7 +45,7 @@ class Main
 	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
 
 	// test serialized data
-	Env.cur.out.writeObj(model)
+	//Env.cur.out.writeObj(model)
 
 	return model
   }
