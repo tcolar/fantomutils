@@ -17,7 +17,7 @@ class Main
     **
     static Void main()
     {
-		updateStats
+		//updateStats
 
 		ServerService().run()
     }

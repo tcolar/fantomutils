@@ -8,6 +8,7 @@ using webmod
 using util
 using fwt
 using gfx
+using dom
 
 **
 ** ServerService
@@ -30,6 +31,7 @@ class ServerService : AbstractMain
           [
             "index": ShowIndex(),
             "pod":   ServerMod(),
+			"data": ServeData(),
           ]
         }
       ]
@@ -84,22 +86,34 @@ const class ShowIndex : WebMod
     out.bodyEnd
     out.htmlEnd
   }
-
 }
 
-@Js
-class TestWindow : Window
+const class ServeData : WebMod
 {
-  ** Dummy test data
+  override Void onGet()
+  {
   LogDataTableModel model1 := LogDataTableModel
 					{
 						it.title="Stats"
 						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april", "may":"May"]
 						data = ["jan":1256, "feb":756, "mar":3456, "april":1728, "may":2120]
 					}
+    // write page
+    res.headers["Content-Type"] = "text/text"
+    out := res.out
+	out.writeObj(model1)
+  }
+}
+
+@Js
+class TestWindow : Window
+{
 
   new make() : super(null, null)
   {
+	LogDataTableModel? model1
+	HttpReq { uri=`/data` }.get |res| {Win.cur.alert(res.content); model1 =  res.content.in.readObj}
+
     content = GridPane
 	{
 		GraphPane(model1, Size(500, 250)),
