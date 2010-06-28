@@ -12,10 +12,11 @@ using sql
 class DBUtil
 {
 
-  const static Str counterTable := "__net_colar_db_cpt"
+  const static Str counterTable := "NET_COLAR_DB_CPT"
 
-  ** Normalize from Camel case (Fantom Type) into db friendly format : lower case, underscore separated
-  ** Examples: "userSettings" -> "user_settings"
+  ** Normalize from Camel case (Fantom Type) into db friendly format : upper case, underscore separated
+  ** Several DB's seemt o convert all to uppercase anyway
+  ** Examples: "userSettings" -> "USER_SETTINGS"
   static Str? normalizeDBName(Str? name)
   {
     if(name==null) return null
@@ -29,17 +30,18 @@ class DBUtil
       {
         if( ! norm.isEmpty && norm[norm.size-1] >= 'a' && norm[norm.size-1] <= 'z')
           norm.addChar('_')
-        norm.addChar(c.lower)
+        norm.addChar(c)
       }
       else
         norm.addChar('_')
     }
-    return norm.toStr
+    return norm.toStr.upper
   }
   
   static Bool tableExists(SqlService db, Str tableName)
   {
-      db.tableExists(tableName)
+		Bool exists := db.tableExists(tableName)
+		return exists
   }
 
   static Void deleteTable(SqlService db, Str tableName)
@@ -66,21 +68,20 @@ class DBUtil
     Int id := 1
     try
     {
-      Str counterTable := "__net_colar_db_cpt"
       if( ! tableExists(db2, counterTable))
       {
-        QueryManager.execute(db2, "CREATE TABLE $counterTable (name VARCHAR(80) NOT NULL, val BIGINT NOT NULL)", null, true)
+        QueryManager.execute(db2, "CREATE TABLE $counterTable (NAME VARCHAR(80) NOT NULL, VAL BIGINT NOT NULL)", null, true)
       }
       Row[] rows := QueryManager.execute(db2, "SELECT * FROM $counterTable WHERE name='$counterName'", null, false)
       if(rows.isEmpty)
       {	// new counter
-		QueryManager.execute(db2, "INSERT INTO $counterTable (val, name) values(2, '$counterName')", null, true)
+		QueryManager.execute(db2, "INSERT INTO $counterTable (VAL, NAME) values(2, '$counterName')", null, true)
       }
 	  else
 	  {
-		id = rows[0]->val
+		id = rows[0]->VAL
 	    nextId := id + 1
-		QueryManager.execute(db2, "UPDATE $counterTable set val=$nextId WHERE name='$counterName'", null, true)
+		QueryManager.execute(db2, "UPDATE $counterTable set VAL=$nextId WHERE NAME='$counterName'", null, true)
 	  }
       db2.commit
     }

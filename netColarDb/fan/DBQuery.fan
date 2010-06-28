@@ -216,7 +216,8 @@ class QueryManager
   static Row[] execute(SqlService db, Str squeleton, [Str:Obj]? params, Bool isUpdate)
   {
     Row[] rows := [,]
-    echo("Will execute: '${squeleton}' with : $params")
+	// Takes forever ... not sure why
+    //echo("Will execute: '${squeleton}' with : $params")
     stmt := db.sql(squeleton).prepare()
     if(isUpdate)
       stmt.execute(params)
