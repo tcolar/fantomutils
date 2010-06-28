@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 18, 2010 thibautc Creation
 //
@@ -11,7 +9,12 @@ using netColarDb
 **
 class LogStatQueries
 {
-  static SelectQuery ThisMonthDailyHits()
+	Str:SelectQuery standardQueries := [//"Today Hourly Hits":thisMonthDailyHits(),
+										"This Month Daily Hits":thisMonthDailyHits()]
+										//"This Year Monthly Hits":thisMonthDailyHits(),
+										//"This Year Daily Hits":thisMonthDailyHits()
+
+  static SelectQuery thisMonthDailyHits()
   {
 	now := DateTime.now
 	start := DateTime(now.year, now.month, 0, 0, 0)

@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 14, 2010 thibautc Creation
 //
@@ -10,9 +8,9 @@ using netColarDb
 
 **
 ** CountingProcessor
-** Implementation of counter processor (just count request totals)
+** Implementation of hits processor (just count hits totals per timespan)
 **
-class CountingProcessor : LogProcessor
+class HitsProcessor : LogProcessor
 {
 	LogTask? task
 	SqlService? db
@@ -73,6 +71,7 @@ class CountingProcessor : LogProcessor
 		record.taskSpan = span.name
 		record.taskName = task.uniqueName
 		record.value = record.value + cpt
+		record.uniqueItem = -1
 		record.save(db)
 	}
 }

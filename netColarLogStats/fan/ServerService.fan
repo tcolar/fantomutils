@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 14, 2010 thibautc Creation
 //
@@ -102,7 +100,11 @@ class TestWindow : Window
 
   new make() : super(null, null)
   {
-    content = GraphPane(model1, Size(500, 250))
+    content = GridPane
+	{
+		GraphPane(model1, Size(500, 250)),
+		GraphPane(model1, Size(500, 250)),
+	}
   }
 
   Void main()

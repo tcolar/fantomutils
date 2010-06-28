@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 8, 2010 thibautc Creation
 //

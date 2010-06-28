@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 10, 2010 thibautc Creation
 //
@@ -40,7 +38,9 @@ class LogTaskRunner
 		switch(task.type)
 		{
 			case TaskType.COUNT:
-				processor = CountingProcessor()
+				processor = HitsProcessor()
+			case TaskType.COUNT_UNIQUE:
+				processor = PageHitsProcessor()
 			default:
 				throw Err("Unexpected processor type: $task.type")
 		}

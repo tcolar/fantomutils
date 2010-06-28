@@ -1,6 +1,4 @@
-// To change this License template, choose Tools / Templates
-// and edit Licenses / FanDefaultLicense.txt
-//
+// Artistic License 2.0
 // History:
 //   Jun 8, 2010 thibautc Creation
 //
@@ -19,34 +17,45 @@ class Main
     **
     static Void main()
     {
-		/*SqlService db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
-		db.open
-		model1(db)
-		db.close*/
+		updateStats
 
 		ServerService().run()
-		//TestWindow().open
     }
 
-// for testing
-  static LogDataTableModel model1(SqlService db)
-  {
-	query := SelectQuery(LogStatRecord#).where(QueryCond("server", SqlComp.EQUAL, 1))
-					.where(QueryCond("time", SqlComp.GREATER_OR_EQ, "2007-04-00 00:00:00"))
-					.where(QueryCond("time", SqlComp.LOWER, "2007-05-00 00:00:00"))
-					.where(QueryCond("task_span", SqlComp.EQUAL, TaskGranularity.DAY.name))
-					.where(QueryCond("task_name", SqlComp.EQUAL, "TestCounter"))
-					.orderBy("time")
+	static Void updateStats()
+	{
+		//db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+		//db := SqlService("jdbc:h2:~/fantest", "sa", "")
+		db := SqlService("jdbc:hsqldb:file://tmp/fantest", "sa", "")
+		db.open
+		// start with clean sheet
+		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogServer#.name))
+		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogFile#.name))
+		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogPage#.name))
+		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogStatRecord#.name))
+		DBUtil.deleteTable(db, DBUtil.counterTable)
 
-	rows := LogStatRecord.findAllRows(db, query)
+		server := LogServer{serverName = "test"}
+		server.save(db)
+		log := LogFile{serverId = server.id; path = `/home/thibautc/colar_06.log`}
+		log.save(db)
 
-	formater := |Str str -> Str| {DateTime.fromStr(str).day.toStr}
-	model := LogDataTableModel(){it.title = "Daily Hits for 04 2007"}
-	LogDataTableModelHelper.injectRows(model, rows, "time", "value", formater)
+		task := LogTask
+		{
+			uniqueName = "TestCounter"
+			serverId = server.id
+			type = TaskType.COUNT
+		}
+		LogTaskRunner(task).run(db)
 
-	// test serialized data
-	//Env.cur.out.writeObj(model)
+		task2 := LogTask
+		{
+			uniqueName = "PageCounter"
+			serverId = server.id
+			type = TaskType.COUNT_UNIQUE
+		}
+		LogTaskRunner(task2).run(db)
 
-	return model
-  }
+		db.close
+	}
 }
