@@ -130,8 +130,8 @@ class TestWindow : Window
 
     content = GridPane
 	{
-		GraphPane(model1, Size(500, 250)),
-		GraphPane(model1, Size(500, 250)),
+		GraphPane(model1, Size(500, 350)),
+		//GraphPane(model1, Size(500, 250)),
 	}
   }
 

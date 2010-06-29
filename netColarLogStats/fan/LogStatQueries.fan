@@ -9,7 +9,7 @@ using netColarDb
 **
 class LogStatQueries
 {
-	Str:SelectQuery standardQueries := [//"Today Hourly Hits":thisMonthDailyHits(),
+  const Str:SelectQuery standardQueries := [//"Today Hourly Hits":thisMonthDailyHits(),
 										"This Month Daily Hits":thisMonthDailyHits()]
 										//"This Year Monthly Hits":thisMonthDailyHits(),
 										//"This Year Daily Hits":thisMonthDailyHits()
