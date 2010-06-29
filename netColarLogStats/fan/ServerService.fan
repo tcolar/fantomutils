@@ -106,11 +106,6 @@ const class ServeData : WebMod
 								LogDataPoint("mar","March",1723),
 								LogDataPoint("apr","April",1526),
 								LogDataPoint("may","May",532),
-								LogDataPoint("jan","Januanry",1256),
-								LogDataPoint("feb","February",756),
-								LogDataPoint("mar","March",1723),
-								LogDataPoint("apr","April",1526),
-								LogDataPoint("may","May",532),
 						]
 					}
     // send the data
