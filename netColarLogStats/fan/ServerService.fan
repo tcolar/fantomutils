@@ -12,6 +12,7 @@ using dom
 
 **
 ** ServerService
+** Entry point of the application, starts the server(WISP) and handles requests
 **
 class ServerService : AbstractMain
 {
@@ -42,7 +43,7 @@ class ServerService : AbstractMain
 	}
 }
 
-** Serve pod resources
+** Serve fantom pod resources
 const class ServerMod : WebMod
 {
   override Void onGet()
@@ -58,7 +59,7 @@ const class ServerMod : WebMod
   }
 }
 
-** Render Index page
+** Render custom Index page
 const class ShowIndex : WebMod
 {
   override Void onGet()
@@ -71,7 +72,7 @@ const class ShowIndex : WebMod
     out.head
       out.title.w("Log stats viewer").titleEnd
       //out.includeJs(`/pod/sys/sys.js`)
-      out.includeJs(`http://127.0.0.1/sys.js`)
+      out.includeJs(`http://127.0.0.1/sys.js`) // TODO: temp (has fix for http://hg.fandev.org/fan-1.0/rev/77f2fce9452d )
       out.includeJs(`/pod/concurrent/concurrent.js`)
       out.includeJs(`/pod/web/web.js`)
       out.includeJs(`/pod/gfx/gfx.js`)
@@ -96,7 +97,7 @@ const class ServeData : WebMod
 {
   override Void onGet()
   {
-  // test data for now
+  // hard coded test data for now
   LogDataTableModel model1 := LogDataTableModel
 					{
 						it.title="Stats"
@@ -115,7 +116,7 @@ const class ServeData : WebMod
   }
 }
 
-** Generated component of index page
+** Generated main component of index page
 @Js
 class TestWindow : Window
 {

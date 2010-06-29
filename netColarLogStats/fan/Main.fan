@@ -17,11 +17,15 @@ class Main
     **
     static Void main()
     {
+		/*
+			This is under construction, main here is for testing at this point.
+		*/
 		//updateStats
 
 		ServerService().run()
     }
 
+	** Parse test log data and run test jobs to pupulate test log data points
 	static Void updateStats()
 	{
 		//db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
