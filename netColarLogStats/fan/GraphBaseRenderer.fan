@@ -41,7 +41,7 @@ abstract class GraphBaseRenderer : Canvas
 		g.pen =  Pen { width = 1; dash=[4,4].toImmutable }
 		g.brush =  Color.blue
 		// Graph value scale : 5, 10, 50, 100, 500, 1k, 5k, 10k, 50k, 100k, 1M, 5M, 10M, 50M, 100M, 500M ...
-		Int max := maxDataVal(dataModel.data)
+		Int max := dataModel.dataMaxVal
 		(0..4).each
 		{
 			g.drawLine(30, 15 + hQuart * it, sz.w, 15 + hQuart * it)
@@ -66,21 +66,12 @@ abstract class GraphBaseRenderer : Canvas
 
 	Int getFullScale(Int baseScale)
 	{
-		max := dataModel.data.vals.max
+		max := dataModel.dataMaxVal
 		scale := baseScale
 		while(max > scale) {scale = scale.toStr[0]=='5' ? scale*2 : scale*5}
 		return scale
 	}
 
-	Int maxDataVal(Str:Int data)
-	{
-		data.vals.max
-	}
-
-	Int dataTotal(Str:Int data)
-	{
-		data.vals.reduce(0) |Int r, Int v -> Int| {return v + r}
-	}
 }
 
 ** A set of 'unique' colors
@@ -167,7 +158,14 @@ class GraphPane : ContentPane
 		Button
 		{
 			text = "Raw"
-			onAction.add {graph = Table { model = dataModel }; updateGraph}
+			onAction.add 
+			{
+				graph = ScrollPane
+				{
+					Table {it.size = sz; model = dataModel;},
+				}
+				updateGraph
+			}
 		},
 	}
   }

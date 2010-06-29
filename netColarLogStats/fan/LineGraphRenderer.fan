@@ -24,7 +24,7 @@ class LineGraphRenderer : GraphBaseRenderer
 	override Void onPaint(Graphics g)
 	{
 		baseScale := 5
-		max := maxDataVal(dataModel.data)
+		max := dataModel.dataMaxVal
 		nbVals := dataModel.data.size
 		fullScale := getFullScale(baseScale)
 
@@ -35,9 +35,9 @@ class LineGraphRenderer : GraphBaseRenderer
 		cpt := 0
 		lastX := 0
 		g.pen =  Pen { width = 2 }
-		dataModel.data.each |Int val, Str key|
+		dataModel.data.each |LogDataPoint p|
 		{
-			key = dataModel.formatedKeys[key]
+			key := p.formatedKey
 			lx := (30.toFloat + interval*cpt.toFloat).toInt
 			if(lastX < lx -12)
 			{
@@ -51,10 +51,10 @@ class LineGraphRenderer : GraphBaseRenderer
 		g.brush =  Color.makeRgb(0xFF, 0x66, 0x66)
 		Point? prev
 		cpt = 0
-		dataModel.data.each |Int val, Str key|
+		dataModel.data.each |LogDataPoint point|
 		{
 			// Add data points and link them with line
-			p := Point((30.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * val) / fullScale)
+			p := Point((30.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * point.val) / fullScale)
 			g.fillOval(p.x-2, p.y-2, 6, 6)
 			if(prev!=null) g.drawLine(p.x, p.y, prev.x, prev.y);
 			prev = p

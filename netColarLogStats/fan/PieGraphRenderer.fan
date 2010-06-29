@@ -16,14 +16,14 @@ class PieGraphRenderer : GraphBaseRenderer
 	** Can also use this to show only the top 'n' slices
 	Int maxSlices := 20
 
-	internal Str:Int data
+	internal LogDataPoint[] data
 	internal Int longestKey
 	internal Bool hasOthers := false
 
 	new make(LogDataTableModel dataModel, Size sz)
 	{
 		this.dataModel = dataModel
-		data = filterData(dataModel.data)
+		data = filterData(dataModel)
 		this.sz = sz
 	}
 
@@ -32,19 +32,19 @@ class PieGraphRenderer : GraphBaseRenderer
 		g.pen =  Pen { width = 1 }
 		g.brush = Color.black
 
-		dataTotal := dataTotal(data).toFloat
+		dataTotal := dataModel.dataTotal.toFloat
 
 		g.antialias = true
 		g.font = font
 
 		// calculate longest key text size (pixels)
-		longestKey = data.keys.reduce(0) |Int r, Str k -> Int|
+		longestKey = data.reduce(0) |Int v, LogDataPoint p -> Int|
 		{
-			pct := data[k].toFloat * 100f / dataTotal
+			pct := p.val.toFloat * 100f / dataTotal
 			pctStr := pct.toLocale("0.00")
-			txt := "${dataModel.formatedKeys[k]} - ${pctStr}%"
+			txt := "${p.formatedKey} - ${pctStr}%"
 			w := g.font.width( txt )
-			return w > r ? w : r
+			return w > v ? w : v
 		}
 		// size of the "pie"
 		// 30 for padding on each side + 15 between graph and legend + longest key text + 10 : key square + 6 : k square spacing
@@ -70,20 +70,20 @@ class PieGraphRenderer : GraphBaseRenderer
 		g.brush = Color.white
 		g.fillOval(startX, startY, graphSize.w, graphSize.h)
 		// pie data
-		data.each |val, key|
+		data.each |LogDataPoint p|
 		{
 			color := colors.nextColor
 			// keys / legend
 			g.brush = Color.black
 			g.drawRect(startX + graphSize.w + 15, startYKeys, 10, 10)
-			pct := val.toFloat * 100f / dataTotal
+			pct := p.val.toFloat * 100f / dataTotal
 			pctStr := pct.toLocale("0.00")
-			txt := "${dataModel.formatedKeys[key]} - ${pctStr}%"
+			txt := "${p.formatedKey} - ${pctStr}%"
 			g.drawText(txt, startX + graphSize.w + 15 + 10 + 6, startYKeys)
 			g.brush = color
 			g.fillRect(startX + graphSize.w + 15 + 1, startYKeys+1, 9, 9)
 			// draw the slice
-			Float arcAngle := val.toFloat / dataTotal * 360f
+			Float arcAngle := p.val.toFloat / dataTotal * 360f
 			// I want to go clockwise (negative values)
 			//g.fillArc(startX, startY, graphSize.w, graphSize.h, curAngle.toInt, - arcAngle.toInt -1)
 			radius := (graphSize.w / 2)
@@ -125,19 +125,19 @@ class PieGraphRenderer : GraphBaseRenderer
 	}
 
 
-	internal Str:Int filterData(Str:Int data)
+	internal LogDataPoint[] filterData(LogDataTableModel model)
 	{
-		Int max := maxDataVal(data)
+		Int max := model.dataMaxVal
 		// Order from high to low
-		Str:Int newData := [:] { ordered = true }
-		// Only keep value above a certain %
+		LogDataPoint[] newData := [,]
 		cpt := 0
 		// filter
-		data.each |i, s|
+		model.data.each |LogDataPoint p|
 		{
-			if( i * max / 100 < minPct || newData.size == maxSlices)
+			// Only keep value above a certain %, up to maxSlices items
+			if( p.val * max / 100 < minPct || newData.size == maxSlices)
 				{hasOthers = true; return}
-			newData.set(s, i)
+			newData.add(p)
 		}
 		return newData
 	}

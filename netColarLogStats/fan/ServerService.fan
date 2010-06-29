@@ -42,6 +42,7 @@ class ServerService : AbstractMain
 	}
 }
 
+** Serve pod resources
 const class ServerMod : WebMod
 {
   override Void onGet()
@@ -57,6 +58,7 @@ const class ServerMod : WebMod
   }
 }
 
+** Render Index page
 const class ShowIndex : WebMod
 {
   override Void onGet()
@@ -68,7 +70,8 @@ const class ShowIndex : WebMod
     out.html
     out.head
       out.title.w("Log stats viewer").titleEnd
-      out.includeJs(`/pod/sys/sys.js`)
+      //out.includeJs(`/pod/sys/sys.js`)
+      out.includeJs(`http://127.0.0.1/sys.js`)
       out.includeJs(`/pod/concurrent/concurrent.js`)
       out.includeJs(`/pod/web/web.js`)
       out.includeJs(`/pod/gfx/gfx.js`)
@@ -82,37 +85,52 @@ const class ShowIndex : WebMod
       WebUtil.jsMain(out, "netColarLogStats::TestWindow")
     out.headEnd
     out.body
-    out.h2.w("hello").h2End
+	out.w("Fetching data ...")
     out.bodyEnd
     out.htmlEnd
   }
 }
 
+** Send serialized log data (ajax)
 const class ServeData : WebMod
 {
   override Void onGet()
   {
+  // test data for now
   LogDataTableModel model1 := LogDataTableModel
 					{
 						it.title="Stats"
-						formatedKeys = ["jan":"jan", "feb":"feb","mar":"mar","april":"april", "may":"May"]
-						data = ["jan":1256, "feb":756, "mar":3456, "april":1728, "may":2120]
+						data = [
+								LogDataPoint("jan","Januanry",1256),
+								LogDataPoint("feb","February",756),
+								LogDataPoint("mar","March",1723),
+								LogDataPoint("apr","April",1526),
+								LogDataPoint("may","May",532),
+								LogDataPoint("jan","Januanry",1256),
+								LogDataPoint("feb","February",756),
+								LogDataPoint("mar","March",1723),
+								LogDataPoint("apr","April",1526),
+								LogDataPoint("may","May",532),
+						]
 					}
-    // write page
+    // send the data
     res.headers["Content-Type"] = "text/text"
     out := res.out
 	out.writeObj(model1)
   }
 }
 
+** Generated component of index page
 @Js
 class TestWindow : Window
 {
-
   new make() : super(null, null)
   {
 	LogDataTableModel? model1
-	HttpReq { uri=`/data` }.get |res| {Win.cur.alert(res.content); model1 =  res.content.in.readObj}
+	ajax := HttpReq { uri=`/data`; async = false}
+	ajax.get |res| {model1 =  res.content.in.readObj}
+
+	Win.cur.alert(model1);
 
     content = GridPane
 	{

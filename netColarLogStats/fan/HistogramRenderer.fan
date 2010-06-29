@@ -26,7 +26,7 @@ class HistogramRenderer : GraphBaseRenderer
 	{
 		baseScale := 5
 
-		max := maxDataVal(dataModel.data)
+		max := dataModel.dataMaxVal
 		nbVals := dataModel.data.size
 		fullScale := getFullScale(baseScale)
 		// draw base
@@ -36,9 +36,9 @@ class HistogramRenderer : GraphBaseRenderer
 		cpt := 0
 		lastX := 0
 		g.pen =  Pen { width = 2 }
-		dataModel.data.each |Int val, Str key|
+		dataModel.data.each |LogDataPoint p|
 		{
-			key = dataModel.formatedKeys[key]
+			key := p.formatedKey
 			lx := (31.toFloat + interval*cpt.toFloat + interval/2f - g.font.width(key).toFloat/2f).toInt
 			if(lastX < lx - 12)
 			{
@@ -50,11 +50,11 @@ class HistogramRenderer : GraphBaseRenderer
 		// Plot the data
 		ColorSet colors := ColorSet()
 		cpt = 0
-		dataModel.data.each |Int val, Str key|
+		dataModel.data.each |LogDataPoint point|
 		{
 			// Add data bars
 			g.brush =  colors.nextColor
-			p := Point((31.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * val) / fullScale)
+			p := Point((31.toFloat + interval*cpt.toFloat).toInt, sz.h - 15 - (graphSize.h * point.val) / fullScale)
 			g.fillRect(p.x, p.y, interval.toInt, sz.h - 16 - p.y)
 			cpt++
 		}
