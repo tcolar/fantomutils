@@ -111,6 +111,8 @@ const class ServeData : WebMod
 
   override Void onPost()
   {
+	// TODO: this is super dangerous and unsafe (executing method requested by frontend)
+	// need to send an ID or lookup it's in the specified queries - maybe use an enum
 	Str queryStr := req.in.readAllStr
 	query := LogStatQuery.fromStr(queryStr)
 	
