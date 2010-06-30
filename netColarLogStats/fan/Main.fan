@@ -28,6 +28,7 @@ class Main
 	** Parse test log data and run test jobs to pupulate test log data points
 	static Void updateStats(SqlService db)
 	{
+		db.open
 		// start with clean sheet
 		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogServer#.name))
 		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogFile#.name))
@@ -42,7 +43,7 @@ class Main
 
 		task := LogTask
 		{
-			uniqueName = "TestCounter"
+			uniqueName = "Hits"
 			serverId = server.id
 			type = TaskType.COUNT
 		}
@@ -50,10 +51,11 @@ class Main
 
 		task2 := LogTask
 		{
-			uniqueName = "PageCounter"
+			uniqueName = "PageHits"
 			serverId = server.id
 			type = TaskType.COUNT_UNIQUE
 		}
 		LogTaskRunner(task2).run(db)
+		db.close
 	}
 }

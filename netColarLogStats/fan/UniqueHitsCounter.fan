@@ -15,10 +15,10 @@ abstract class UniqueHitsProcessor : LogProcessor
 	LogTask? task
 	SqlService? db
 	// Stores counter values
-	DateTime:UniqueHitVal hCounters := [:] // hourly totals per item
-	DateTime:UniqueHitVal dCounters := [:] // dayly totals per item
-	DateTime:UniqueHitVal mCounters := [:] // monthly totals per item
-	DateTime:UniqueHitVal yCounters := [:] // yearly totals per item
+	//DateTime:[Int:Int] hCounters := [:] // hourly totals per item
+	DateTime:[Int:Int] dCounters := [:] // dayly totals per item
+	DateTime:[Int:Int] mCounters := [:] // monthly totals per item
+	DateTime:[Int:Int] yCounters := [:] // yearly totals per item
 
 	override Void init(LogTask task, SqlService db) {this.task = task; this.db = db}
 
@@ -34,8 +34,8 @@ abstract class UniqueHitsProcessor : LogProcessor
 		if(itemId < 0) return
 		ts := line.timestamp
 		// store / update the hourly counters
-		hour := ts.floor(1hr)
-		incrementUniqueVal(hCounters, hour, itemId)
+		//hour := ts.floor(1hr)
+		//incrementUniqueVal(hCounters, hour, itemId)
 		day := DateTime(ts.year, ts.month, ts.day, 0, 0)
 		incrementUniqueVal(dCounters, day, itemId)
 		month := DateTime(ts.year, ts.month, 1, 0, 0)
@@ -44,10 +44,11 @@ abstract class UniqueHitsProcessor : LogProcessor
 		incrementUniqueVal(yCounters, year, itemId)
 	}
 
-	internal Void incrementUniqueVal(DateTime:UniqueHitVal counter, DateTime time, Int itemId)
+	internal Void incrementUniqueVal(DateTime:[Int:Int] counter, DateTime time, Int itemId)
 	{
-		UniqueHitVal hit := counter.containsKey(time) ? counter[time] : UniqueHitVal(itemId)
-		hit.val++
+		hit := counter.containsKey(time) ? counter[time] : [:]
+		Int val := hit.containsKey(itemId) ? hit[itemId] : 0
+		hit.set(itemId, val+1)
 		counter.set(time, hit)
 	}
 
@@ -55,21 +56,33 @@ abstract class UniqueHitsProcessor : LogProcessor
 	override Void completed()
 	{
 		// Store computed data
-		hCounters.each |UniqueHitVal hit, DateTime dt|
+		/*hCounters.each |[Int:Int] hit, DateTime dt|
 		{
-			updateCpt(task, db, dt, hit.itemId, hit.val, TaskGranularity.HOUR)
+			hit.each |Int val, Int itemId|
+			{
+				updateCpt(task, db, dt, itemId, val, TaskGranularity.HOUR)
+			}
+		}*/
+		dCounters.each |[Int:Int] hit, DateTime dt|
+		{
+			hit.each |Int val, Int itemId|
+			{
+				updateCpt(task, db, dt, itemId, val, TaskGranularity.DAY)
+			}
 		}
-		dCounters.each |UniqueHitVal hit, DateTime dt|
+		mCounters.each |[Int:Int] hit, DateTime dt|
 		{
-			updateCpt(task, db, dt, hit.itemId, hit.val, TaskGranularity.DAY)
+			hit.each |Int val, Int itemId|
+			{
+				updateCpt(task, db, dt, itemId, val, TaskGranularity.MONTH)
+			}
 		}
-		mCounters.each |UniqueHitVal hit, DateTime dt|
+		yCounters.each |[Int:Int] hit, DateTime dt|
 		{
-			updateCpt(task, db, dt, hit.itemId, hit.val, TaskGranularity.MONTH)
-		}
-		yCounters.each |UniqueHitVal hit, DateTime dt|
-		{
-			updateCpt(task, db, dt, hit.itemId, hit.val, TaskGranularity.YEAR)
+			hit.each |Int val, Int itemId|
+			{
+				updateCpt(task, db, dt, itemId, val, TaskGranularity.YEAR)
+			}
 		}
 	}
 
@@ -91,14 +104,6 @@ abstract class UniqueHitsProcessor : LogProcessor
 	}
 }
 
-** Stores a unique item ciurrent counter value
-class UniqueHitVal
-{
-	Int val := 0
-	Int itemId
-	new make(Int itemId) {this.itemId=itemId}
-}
-
 ** Implementation to count by unique Page path
 class PageHitsProcessor : UniqueHitsProcessor
 {
@@ -106,7 +111,7 @@ class PageHitsProcessor : UniqueHitsProcessor
 	{
 		// TODO: not count if 404 ?
 		// TODO : only count pages (no extension, or .htm .html, .php, .jsp, .asp, .aspx etc...)
-		query := SelectQuery(LogPage#).where(QueryCond("path", SqlComp.EQUAL, line.page))
+		query := SelectQuery(LogPage#).where(QueryCond("PATH", SqlComp.EQUAL, line.page))
 		LogPage page := LogPage.findOrCreateOne(db, query)
 		if(page.isNew)
 		{

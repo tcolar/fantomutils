@@ -80,7 +80,7 @@ class LogDataTableModelHelper
   ** Set the model data from a set of SQL rows
   ** KeyFormater can be set to use a custom formatter on the key display
   ** This is what is displayed as the horizontal scale on a graph
-  static LogDataTableModel injectRows(LogDataTableModel model, Row[] rows, Str keyCol, Str valCol, |Str->Str|? keyTextFormater := null)
+  static LogDataTableModel injectRows(SqlService db, LogDataTableModel model, Row[] rows, Str keyCol, Str valCol, |Str, SqlService->Str|? keyTextFormater := null)
   {
 	rows.each |Row row|
 	{
@@ -88,7 +88,7 @@ class LogDataTableModelHelper
 		if(model.valHeader.isEmpty) model.valHeader = row.col(valCol).name
 		key := row.get(row.col(keyCol)).toStr
 		val := row.get(row.col(valCol))
-		formatedKey := keyTextFormater==null ? key : keyTextFormater.call(key)
+		formatedKey := keyTextFormater==null ? key : keyTextFormater.call(key, db)
 
 		model.data.add(LogDataPoint(key, formatedKey, val))
 	}

@@ -113,12 +113,11 @@ const class ServeData : WebMod
   {
 	// TODO: this is super dangerous and unsafe (executing method requested by frontend)
 	// need to send an ID or lookup it's in the specified queries - maybe use an enum
-	Str queryStr := req.in.readAllStr
-	query := LogStatQuery.fromStr(queryStr)
+	logReq := LogQueryRequest.fromStr(req.in.readAllStr)
 	
 	// Db need to be opened by thread
 	db.open
-	LogDataTableModel model1 := query.fetchData(db)
+	LogDataTableModel model1 := LogStatQuery.fetchData(db, logReq)
 	db.close
     // send the data
     res.headers["Content-Type"] = "text/text"
@@ -134,16 +133,21 @@ class TestWindow : Window
   new make() : super(null, null)
   {
 	LogDataTableModel? model1
+	LogDataTableModel? model2
 
 	ajax := HttpReq { uri=`/data`; async = false;}
-	ajax.post("Monthly hits;netColarLogStats::LogStatQueries.thisMonthDailyHits;") |res| {model1 =  res.content.in.readObj}
+	logReq := LogQueryRequest("monthHits",["2007","6"])
+	ajax.post(logReq.toStr) |res| {model1 =  res.content.in.readObj}
+
+	logReq2 := LogQueryRequest("monthPageHits",["2007","6"])
+	ajax.post(logReq2.toStr) |res| {model2 =  res.content.in.readObj}
 
 	Win.cur.alert(model1);
 
     content = GridPane
 	{
 		GraphPane(model1, Size(500, 350)),
-		GraphPane(model1, Size(500, 250)),
+		GraphPane(model2, Size(500, 250)),
 	}
   }
 

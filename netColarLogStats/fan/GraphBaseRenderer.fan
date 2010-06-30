@@ -128,7 +128,6 @@ class GraphPane : ContentPane
 	content?.removeAll
 	content = GridPane
 	{
-		Table { model = dataModel },
 		buttons,
 		graph,
 	}
@@ -157,13 +156,11 @@ class GraphPane : ContentPane
 		},
 		Button
 		{
+			// TODO: sizing / scrolling still not quite good
 			text = "Raw"
 			onAction.add 
 			{
-				graph = ScrollPane
-				{
-					Table {it.size = sz; model = dataModel;},
-				}
+				graph = Table {model = dataModel; multi=true; it.size=sz}
 				updateGraph
 			}
 		},

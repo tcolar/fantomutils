@@ -14,7 +14,7 @@ class PieGraphRenderer : GraphBaseRenderer
 	** Only values representing at least than minPct percentage will be shown (default: 2)
 	Int minPct := 2
 	** Can also use this to show only the top 'n' slices
-	Int maxSlices := 20
+	Int maxSlices := 15
 
 	internal LogDataPoint[] data
 	internal Int longestKey
@@ -128,11 +128,12 @@ class PieGraphRenderer : GraphBaseRenderer
 	internal LogDataPoint[] filterData(LogDataTableModel model)
 	{
 		Int max := model.dataMaxVal
-		// Order from high to low
+		// Order from high to low (working on data copy)
+		data := model.data.dup().sort |LogDataPoint a, LogDataPoint b -> Int| {return b.val <=> a.val}
 		LogDataPoint[] newData := [,]
 		cpt := 0
 		// filter
-		model.data.each |LogDataPoint p|
+		data.each |LogDataPoint p|
 		{
 			// Only keep value above a certain %, up to maxSlices items
 			if( p.val * max / 100 < minPct || newData.size == maxSlices)
