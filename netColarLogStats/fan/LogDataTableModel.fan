@@ -8,7 +8,7 @@ using sql
 **
 ** Data to be rendered by a LogDataRenderer
 ** It will be compiled into javascript
-** And can be pasewd to the browser as a serailized object
+** And can be passed to the browser as a serialized object
 ** So it needs to be kept to the minimum
 **
 @Js
@@ -65,8 +65,8 @@ class LogDataPoint
 	** Simple serialization
 	override Str toStr()
 	{
-		k :=key.replace(";",",");
-		fk := formatedKey.replace(";",",");
+		k :=key.replace(";",",")
+		fk := formatedKey.replace(";",",")
 		return "$k;$fk;$val"
 	}
 }

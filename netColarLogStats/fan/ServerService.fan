@@ -9,6 +9,7 @@ using util
 using fwt
 using gfx
 using dom
+using sql
 
 **
 ** ServerService
@@ -18,6 +19,12 @@ class ServerService : AbstractMain
 {
   @Opt { help = "http port" }
   Int port := 8580
+  SqlService db
+
+  new make(SqlService db)
+  {
+	this.db = db
+  }
 
   override Int run()
   {
@@ -32,7 +39,7 @@ class ServerService : AbstractMain
           [
             "index": ShowIndex(),
             "pod":   ServerMod(),
-			"data": ServeData(),
+			"data": ServeData(db),
           ]
         }
       ]
@@ -95,20 +102,22 @@ const class ShowIndex : WebMod
 ** Send serialized log data (ajax)
 const class ServeData : WebMod
 {
-  override Void onGet()
+	const SqlService db
+
+	new make(SqlService db)
+	{
+		this.db = db
+	}
+
+  override Void onPost()
   {
-  // hard coded test data for now
-  LogDataTableModel model1 := LogDataTableModel
-					{
-						it.title="Stats"
-						data = [
-								LogDataPoint("jan","Januanry",1256),
-								LogDataPoint("feb","February",756),
-								LogDataPoint("mar","March",1723),
-								LogDataPoint("apr","April",1526),
-								LogDataPoint("may","May",532),
-						]
-					}
+	Str queryStr := req.in.readAllStr
+	query := LogStatQuery.fromStr(queryStr)
+	
+	// Db need to be opened by thread
+	db.open
+	LogDataTableModel model1 := query.fetchData(db)
+	db.close
     // send the data
     res.headers["Content-Type"] = "text/text"
     out := res.out
@@ -123,8 +132,9 @@ class TestWindow : Window
   new make() : super(null, null)
   {
 	LogDataTableModel? model1
-	ajax := HttpReq { uri=`/data`; async = false}
-	ajax.get |res| {model1 =  res.content.in.readObj}
+
+	ajax := HttpReq { uri=`/data`; async = false;}
+	ajax.post("Monthly hits;netColarLogStats::LogStatQueries.thisMonthDailyHits;") |res| {model1 =  res.content.in.readObj}
 
 	Win.cur.alert(model1);
 

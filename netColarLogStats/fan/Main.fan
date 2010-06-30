@@ -17,21 +17,17 @@ class Main
     **
     static Void main()
     {
-		/*
-			This is under construction, main here is for testing at this point.
-		*/
-		//updateStats
-
-		ServerService().run()
-    }
-
-	** Parse test log data and run test jobs to pupulate test log data points
-	static Void updateStats()
-	{
 		//db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
 		//db := SqlService("jdbc:h2:~/fantest", "sa", "")
 		db := SqlService("jdbc:hsqldb:file://tmp/fantest", "sa", "")
-		db.open
+		//updateStats(db)
+		ServerService(db).run()
+		echo("service done")
+    }
+
+	** Parse test log data and run test jobs to pupulate test log data points
+	static Void updateStats(SqlService db)
+	{
 		// start with clean sheet
 		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogServer#.name))
 		DBUtil.deleteTable(db, DBUtil.normalizeDBName(LogFile#.name))
@@ -59,7 +55,5 @@ class Main
 			type = TaskType.COUNT_UNIQUE
 		}
 		LogTaskRunner(task2).run(db)
-
-		db.close
 	}
 }
