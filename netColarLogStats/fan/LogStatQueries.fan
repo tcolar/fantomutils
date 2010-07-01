@@ -9,9 +9,9 @@ using sql
 ** Enum of available queries
 enum class LogQuery
 {
-	curMonthHits(LogStatQuery("Current Month Daily Hits", LogStatQuery#thisMonthDailyHits.qname, "TIME", "VALUE")),
-	monthHits(LogStatQuery("Daily hits for specified Year/Month", LogStatQuery#monthDailyHits.qname, "TIME", "VALUE")),
-	curMonthPageHits(LogStatQuery("Curent month Hits per individual page", LogStatQuery#thisMonthTopPages.qname, "UNIQUE_ITEM", "VALUE")),
+	curMonthHits(LogStatQuery("Current Month Daily Hits", LogStatQuery#thisMonthDailyHits.qname, "TIME", "VALUE", LogStatQuery.dayFormater)),
+	monthHits(LogStatQuery("Daily hits for specified Year/Month", LogStatQuery#monthDailyHits.qname, "TIME", "VALUE", LogStatQuery.dayFormater)),
+	curMonthPageHits(LogStatQuery("Curent month Hits per individual page", LogStatQuery#thisMonthTopPages.qname, "UNIQUE_ITEM", "VALUE", LogStatQuery.pageNameFormater)),
 	monthPageHits(LogStatQuery("Individual page hits for specified Year/Month", LogStatQuery#monthTopPages.qname, "UNIQUE_ITEM", "VALUE", LogStatQuery.pageNameFormater))
 
 	private new make(LogStatQuery query) { this.query = query; }
@@ -111,6 +111,7 @@ const class LogStatQuery
 	}
 
 	static const |Str, SqlService db->Str| pageNameFormater := |Str s, SqlService db->Str| {LogPage? page := LogPage.findById(db, LogPage#, s.toInt); return page?.path}
+	static const |Str, SqlService db->Str| dayFormater := |Str s, SqlService db->Str| {DateTime.fromStr(s).day.toStr}
 }
 
 // #### Lightweight Objects used by the frontend ####

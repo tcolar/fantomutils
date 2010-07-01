@@ -27,6 +27,12 @@ class LogDataTableModel : TableModel
   override Int numCols() { 2 }
   override Str header(Int col) { col==0 ? keyHeader : valHeader }
   override Str text(Int col, Int row){ col==0 ? data[row].formatedKey : data[row].val.toStr }
+  ** Value is a number, so sort it as a number
+  override Int sortCompare(Int col, Int row1, Int row2)
+  {
+	col == 0 ? super.sortCompare(col, row1, row2)
+			: text(col,row2).toInt <=> text(col,row1).toInt
+  }
 
   ** Return the highest value found in the data points
   once Int dataMaxVal()

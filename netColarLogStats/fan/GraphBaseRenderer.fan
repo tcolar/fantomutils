@@ -129,7 +129,14 @@ class GraphPane : ContentPane
 	content = GridPane
 	{
 		buttons,
-		graph,
+		ConstraintPane
+		{
+			minw=sz.w
+			maxw=sz.w
+			minh=sz.h
+			maxh=sz.h
+			graph,
+		}
 	}
 	relayout
   }
@@ -160,7 +167,7 @@ class GraphPane : ContentPane
 			text = "Raw"
 			onAction.add 
 			{
-				graph = Table {model = dataModel; multi=true; it.size=sz}
+				graph = Table {model = dataModel; multi=true; }
 				updateGraph
 			}
 		},
