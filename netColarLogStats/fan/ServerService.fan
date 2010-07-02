@@ -71,6 +71,8 @@ const class ShowIndex : WebMod
 {
   override Void onGet()
   {
+	main := "netColarLogStats::TestWindow"
+
     // write page
     res.headers["Content-Type"] = "text/html"
     out := res.out
@@ -90,10 +92,9 @@ const class ShowIndex : WebMod
        "body { font: 10pt Arial; }
         a { color: #00f; }
         ").styleEnd
-      WebUtil.jsMain(out, "netColarLogStats::TestWindow")
+      WebUtil.jsMain(out, main)
     out.headEnd
     out.body
-	out.w("Fetching data ...")
     out.bodyEnd
     out.htmlEnd
   }
@@ -132,22 +133,35 @@ class TestWindow : Window
 {
   new make() : super(null, null)
   {
-	LogDataTableModel? model1
-	LogDataTableModel? model2
+	GraphPane pane1 := GraphPane(Size(520, 350))
+	GraphPane pane2 := GraphPane(Size(520, 350))
 
-	ajax := HttpReq { uri=`/data`; async = false;}
 	logReq := LogQueryRequest("monthHits",["2007","6"])
-	ajax.post(logReq.toStr) |res| {model1 =  res.content.in.readObj}
+	HttpReq { uri=`/data`;}.post(logReq.toStr) |res| { pane1.updateData(res.content.in.readObj) }
 
-	logReq2 := LogQueryRequest("monthPageHits",["2007","6"])
-	ajax.post(logReq2.toStr) |res| {model2 =  res.content.in.readObj}
+	logReq2 := LogQueryRequest("monthPageHits",["2007","6"/*,100*/]) // TODO: add a limit option (# of items)
+	HttpReq { uri=`/data`;}.post(logReq2.toStr) |res| { pane2.updateData(res.content.in.readObj) }
 
-	Win.cur.alert(model1);
-
-    content = GridPane
+	content = GridPane
 	{
-		GraphPane(model1, Size(520, 350)),
-		GraphPane(model2, Size(520, 350)),
+		numCols = 2
+		expandCol = 1
+		valignCells = Valign.top
+		hgap = 25
+		GridPane
+		{
+			Button{text="My Favorites"},
+			Button{text="Live Stats"},
+			Button{text="Total Hits"},
+			Button{text="Top Pages"},
+			Button{text="Top Referers"},
+		},
+
+		GridPane
+		{
+			pane1,
+			pane2,
+		},
 	}
   }
 

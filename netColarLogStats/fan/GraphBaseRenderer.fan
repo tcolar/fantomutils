@@ -106,25 +106,35 @@ class ColorSet
 ** A panel that shows a stat graph and let you switch between:
 ** Raw data, Line chart, Histogram, Pie chart
 @Js
-class GraphPane : ContentPane
+class GraphPane : BorderPane
 {
-  LogDataTableModel dataModel
+  LogDataTableModel? dataModel
   Size sz
   internal Widget graph
   internal GridPane buttons
 
-  new make(LogDataTableModel dataModel, Size sz) : super()
+  new make(Size sz, LogDataTableModel? data := null) : super()
   {
+	// todo: border
+	// todo: bg
 	this.sz = sz
-	this.dataModel = dataModel
 	buttons = getButtons
-	graph = LineGraphRenderer(dataModel, sz)
+	graph = EdgePane { center = Label{text="Loading data ..."} }
+	if(data == null)
+		updateGraph
+	else
+		updateData(data)
+  }
+
+  Void updateData(LogDataTableModel data)
+  {
+	dataModel = data
+	graph = LineGraphRenderer(dataModel, sz) // Default graph
 	updateGraph
   }
 
-  Void updateGraph()
+  internal Void updateGraph()
   {
-	dataModel.title = "The Updated Stats"
 	content?.removeAll
 	content = GridPane
 	{
@@ -164,7 +174,7 @@ class GraphPane : ContentPane
 		Button
 		{
 			// TODO: sizing / scrolling still not quite good
-			text = "Raw"
+			text = "Table"
 			onAction.add 
 			{
 				graph = Table {model = dataModel; multi=true; }
@@ -174,3 +184,4 @@ class GraphPane : ContentPane
 	}
   }
 }
+
