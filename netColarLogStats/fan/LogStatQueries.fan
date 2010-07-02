@@ -9,9 +9,7 @@ using sql
 ** Enum of available queries
 enum class LogQuery
 {
-	curMonthHits(LogStatQuery("Current Month Daily Hits", LogStatQuery#thisMonthDailyHits.qname, "TIME", "VALUE", LogStatQuery.dayFormater)),
 	monthHits(LogStatQuery("Daily hits for specified Year/Month", LogStatQuery#monthDailyHits.qname, "TIME", "VALUE", LogStatQuery.dayFormater)),
-	curMonthPageHits(LogStatQuery("Curent month Hits per individual page", LogStatQuery#thisMonthTopPages.qname, "UNIQUE_ITEM", "VALUE", LogStatQuery.pageNameFormater)),
 	monthPageHits(LogStatQuery("Individual page hits for specified Year/Month", LogStatQuery#monthTopPages.qname, "UNIQUE_ITEM", "VALUE", LogStatQuery.pageNameFormater))
 
 	private new make(LogStatQuery query) { this.query = query; }
@@ -44,12 +42,6 @@ const class LogStatQuery
 		paramTypes = pt.dup
 	}
 	// Pre made queries
-  static SelectQuery thisMonthDailyHits()
-  {
-	now := DateTime.now
-	return monthDailyHits(now.year, now.month.ordinal + 1)
-  }
-
   ** month: 1 = january
   static SelectQuery monthDailyHits(Int year, Int month)
   {
@@ -57,12 +49,6 @@ const class LogStatQuery
 	start := DateTime(year, m, 1, 0, 0)
 	end := DateTime(year, m.increment , 1, 0, 0)
 	return counterQuery(1, "Hits", TaskGranularity.DAY, start, end)
-  }
-
-  static SelectQuery thisMonthTopPages()
-  {
-	now := DateTime.now
-	return monthTopPages(now.year, now.month.ordinal + 1)
   }
 
   ** month: 1 = january
