@@ -116,7 +116,7 @@ class DBModel
   {
 	// call to getMapping to create the table if needed
     getMapping(db, query.objType)
-    // TODO: Deal with limit, once fantom sql supports it
+	if(limit>0) query.limit = limit
     Row[] rows := query.run(db)
     return rows
   }

@@ -1,0 +1,52 @@
+**************************************************************************
+** title:      NetColarDb
+** author:     Thibaut Colar    http://www.colar.net/
+** created:    05/2010
+** license:    Artistic License 2.0
+**************************************************************************
+
+Overview
+********************
+This pod provides basic ORM features on top of Fantom's sql package.
+
+Usage
+*********************
+You can create your own subclass of DBModel
+That class will then be mapped to a database table
+
+Mapped fields are all the 'simple' fields as well as the fields marked @SerializeField, which will be stored
+as a string version of the serialized field.
+Fields marked @Transient won't be serialized
+
+Note: By default table/field camle case names get transformed into Uppercase, underscore separated, such as:
+var -> VAR
+myVar -> MY_VAR
+
+See DBFacets for other facets allowing custom naming/size mapping definition.
+
+Example
+**********************
+		class MyModel : DBModel
+		{
+			Str keyField := "AbcdEf"
+			Int myval := 35
+			@Transient Int dontSaveIt := 24
+			@SerializeField Str[] mylist := ["Me", "You", "Everybody"]
+		}
+
+	    db = SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
+		db.open
+
+		// creating a new entry
+		MyModel m := MyModel
+		m.save(db)
+		// retrieving by ID
+		MyModel? m2 := DBModel.findById(db, MyModel#, 1)
+		// updating a field and saving
+		m2.myval = 72
+		m2.save()
+		// More advanced query
+		query := SelectQuery(MyModel#).where(QueryCond("KEY_FIELD", SqlComp.EQUAL, "AbcdEf")).orderBy("MYVAL")
+		MyModels models := query.findAll(db, query)
+
+		db.close

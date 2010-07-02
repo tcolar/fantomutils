@@ -25,10 +25,11 @@ class SelectQuery : ConditionalQuery
     appendToSql("SELECT $selectWhat FROM $tableName ");
   }
 
-  /*SelectQuery limit(Int limit)
+  SelectQuery setLimit(Int limit)
   {// TODO: limit
-    appendToSql("LIMIT $limit ")
-  }*/
+    this.limit = limit
+	return this
+  }
 
   ** Add an orderBy statement to the query
   This orderBy(Str orderBy, Bool ascending := true)
@@ -143,6 +144,7 @@ abstract class QueryBase
   Int nbWhere := 0;
   [Str:Obj]? params := [:]
   Bool expectResults := true
+  Int? limit
 
   ** Appends "raw" sql to the query being built, preferably not to be used directly
   This appendToSql(Str s)
@@ -160,7 +162,7 @@ abstract class QueryBase
   ** Run the query
   Row[] run(SqlService db)
   {
-    QueryManager.execute(db, sql.toStr, params, ! expectResults)
+    QueryManager.executeQuery(db, this)
   }
 
 }
@@ -213,13 +215,27 @@ class QueryCond
 class QueryManager
 {
   ** Execute a query usinf Fantom's SQL Api's
-  static Row[] execute(SqlService db, Str squeleton, [Str:Obj]? params, Bool isUpdate)
+  static Row[] executeQuery(SqlService db, QueryBase query)
   {
     Row[] rows := [,]
-	// Takes forever ... not sure why
-    //echo("Will execute: '${squeleton}' with : $params")
-    stmt := db.sql(squeleton).prepare()
-    if(isUpdate)
+	// echo Takes forever ... not sure why
+    // echo("Will execute: '${squeleton}' with : $params")
+    stmt := db.sql(query.sql.toStr).prepare()
+	if(query.limit != null)
+		stmt.limit = query.limit
+    if( ! query.expectResults)
+      stmt.execute(query.params)
+    else
+      rows = stmt.query(query.params)
+    return rows
+  }
+
+  ** Execute a "manual" SQL query
+  static Row[] execute(SqlService db, Str sqlSquel, [Str:Obj]? params, Bool isUpdate)
+  {
+    Row[] rows := [,]
+    stmt := db.sql(sqlSquel).prepare()
+    if( isUpdate )
       stmt.execute(params)
     else
       rows = stmt.query(params)
