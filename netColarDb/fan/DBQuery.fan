@@ -34,7 +34,7 @@ class SelectQuery : ConditionalQuery
   ** Add an orderBy statement to the query
   This orderBy(Str orderBy, Bool ascending := true)
   {
-    appendToSql("ORDER BY $orderBy ");
+    appendToSql("ORDER BY $orderBy ").appendToSql(ascending?"":"DESC ");
   }
 
   ** Build a 'by ID' select query (findById)
@@ -220,9 +220,13 @@ class QueryManager
     Row[] rows := [,]
 	// echo Takes forever ... not sure why
     // echo("Will execute: '${squeleton}' with : $params")
-    stmt := db.sql(query.sql.toStr).prepare()
+    stmt := db.sql(query.sql.toStr)
 	if(query.limit != null)
+	{	// Note: This needs to be done before prepare()
 		stmt.limit = query.limit
+		echo("setting limit to: $stmt.limit")
+	}
+	stmt.prepare()
     if( ! query.expectResults)
       stmt.execute(query.params)
     else
