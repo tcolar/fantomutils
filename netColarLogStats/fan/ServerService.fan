@@ -112,11 +112,9 @@ const class ServeData : WebMod
 
   override Void onPost()
   {
-	// TODO: this is super dangerous and unsafe (executing method requested by frontend)
-	// need to send an ID or lookup it's in the specified queries - maybe use an enum
 	logReq := LogQueryRequest.fromStr(req.in.readAllStr)
 	
-	// Db need to be opened by thread
+	// Db need to be opened by each thread
 	db.open
 	LogDataTableModel model1 := LogStatQuery.fetchData(db, logReq)
 	db.close
@@ -134,10 +132,10 @@ class TestWindow : Window
   new make() : super(null, null)
   {
 	GraphPane pane1 := GraphPane(Size(350, 250))
-	GraphPane pane2 := GraphPane(Size(350, 250))
+	GraphPane pane2 := GraphPane(Size(700, 350))
 
-	logReq := LogQueryRequest("monthHits",["2007","6"])
-	HttpReq { uri=`/data`;}.post(logReq.toStr) |res| { pane1.updateData(res.content.in.readObj) }
+	//logReq := LogQueryRequest("monthHits",["2007","6"])
+	//HttpReq { uri=`/data`;}.post(logReq.toStr) |res| { pane1.updateData(res.content.in.readObj) }
 
 	logReq2 := LogQueryRequest("monthPageHits",["2007","6"/*,100*/]) // TODO: add a limit option (# of items)
 	HttpReq { uri=`/data`;}.post(logReq2.toStr) |res| { pane2.updateData(res.content.in.readObj) }
@@ -168,8 +166,8 @@ class TestWindow : Window
 
 		GridPane
 		{
-            numCols = 2
-			pane1,
+            numCols = 1
+			//pane1,
 			pane2,
 		},
 	  },

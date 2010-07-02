@@ -48,7 +48,7 @@ const class LogStatQuery
 	Month m := Month.vals[month-1]
 	start := DateTime(year, m, 1, 0, 0)
 	end := DateTime(year, m.increment , 1, 0, 0)
-	return counterQuery(1, "Hits", TaskGranularity.DAY, start, end)
+	return counterQuery(1, "Hits", TaskGranularity.DAY, start, end).orderBy("time")
   }
 
   ** month: 1 = january
@@ -57,7 +57,7 @@ const class LogStatQuery
 	Month m := Month.vals[month-1]
 	start := DateTime(year, m, 1, 0, 0)
 	end := DateTime(year, m.increment , 1, 0, 0)
-	return counterQuery(1, "PageHits", TaskGranularity.MONTH, start, end)
+	return counterQuery(1, "PageHits", TaskGranularity.MONTH, start, end).orderBy("VALUE", false).setLimit(30)
   }
 
   internal static SelectQuery counterQuery(Int serverId, Str counterName, TaskGranularity gran, DateTime? start:=null, DateTime? end:=null)
@@ -69,7 +69,7 @@ const class LogStatQuery
 		query = query.where(QueryCond("time", SqlComp.GREATER_OR_EQ, start.toLocale("YYYY-MM-DD hh:mm:ss")))
 	if(end!=null)
 		query = query.where(QueryCond("time", SqlComp.LOWER, end.toLocale("YYYY-MM-DD hh:mm:ss")))
-	return query.orderBy("time")
+	return query
   }
 
 	// TODO: keyFormater ??
@@ -89,7 +89,7 @@ const class LogStatQuery
 
 		m := Method.findMethod(logQuery.query.method)
 		SelectQuery query := m.callList(params)
-		echo("sql: $query.sql with $query.params")
+		echo("sql: $query.sql with $query.params, limit: $query.limit")
 		rows := query.run(db)
 		model := LogDataTableModel {title = logQuery.query.desc}
 		LogDataTableModelHelper.injectRows(db, model, rows, logQuery.query.keyCol, logQuery.query.valCol, logQuery.query.keyFormater)

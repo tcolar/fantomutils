@@ -1,0 +1,10 @@
+**************************************************************************
+** title:      NetColarLogStats
+** author:     Thibaut Colar    http://www.colar.net/
+** created:    06/2010
+** license:    Artistic License 2.0
+**************************************************************************
+
+Overview
+********************
+This is a web server log analysis tool (web based)

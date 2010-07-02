@@ -16,10 +16,10 @@ class LogStatRecord : DBModel
 	Int? server
 	Str? taskName // name of task
 	DateTime? time // time for this data set (rounded to the hour)
+	Int value := 0
 	Int? uniqueItem // optional id, used for taks that count unique items (Example hits PER unique URL)
 	Str? taskSpan // ex: hour, month, year
 	//Str? key // name of task
-	Int value := 0
 }
 
 **
