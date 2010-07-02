@@ -51,7 +51,7 @@ const class LogStatQuery
 	return counterQuery(1, "Hits", TaskGranularity.DAY, start, end).orderBy("time")
   }
 
-  ** month: 1 = january
+  ** month: 1 = january, limiting to 30 ... TODO:  make the limit a param ?
   static SelectQuery monthTopPages(Int year, Int month)
   {
 	Month m := Month.vals[month-1]
