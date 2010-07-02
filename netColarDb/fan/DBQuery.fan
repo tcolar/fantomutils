@@ -224,7 +224,6 @@ class QueryManager
 	if(query.limit != null)
 	{	// Note: This needs to be done before prepare()
 		stmt.limit = query.limit
-		echo("setting limit to: $stmt.limit")
 	}
 	stmt.prepare()
     if( ! query.expectResults)
