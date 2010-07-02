@@ -175,7 +175,7 @@ class GraphPane : BorderPane
 		Button
 		{
 			// TODO: sizing / scrolling still not quite good
-			image = Image(`http://127.0.0.1:8580/pod/netColarLogStats/res/table.png`)
+			image = Image(`http://127.0.0.1:8580/pod/netColarLogStats/table.png`)
 			onAction.add 
 			{
 				graph = Table {model = dataModel; multi=true; }
