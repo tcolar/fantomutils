@@ -115,11 +115,12 @@ class GraphPane : BorderPane
 
   new make(Size sz, LogDataTableModel? data := null) : super()
   {
-	// todo: border
-	// todo: bg
 	this.sz = sz
 	buttons = getButtons
 	graph = EdgePane { center = Label{text="Loading data ..."} }
+    insets = Insets(6)
+    border = Border("2 #008 5")
+    bg = Color("#eeeeff")
 	if(data == null)
 		updateGraph
 	else
@@ -137,7 +138,7 @@ class GraphPane : BorderPane
   {
 	content?.removeAll
 	content = GridPane
-	{
+      {
 		buttons,
 		ConstraintPane
 		{
@@ -147,7 +148,7 @@ class GraphPane : BorderPane
 			maxh=sz.h
 			graph,
 		}
-	}
+    }
 	relayout
   }
 
@@ -174,7 +175,7 @@ class GraphPane : BorderPane
 		Button
 		{
 			// TODO: sizing / scrolling still not quite good
-			text = "Table"
+			image = Image(`http://127.0.0.1:8580/pod/netColarLogStats/res/table.png`)
 			onAction.add 
 			{
 				graph = Table {model = dataModel; multi=true; }

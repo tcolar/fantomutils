@@ -80,8 +80,8 @@ const class ShowIndex : WebMod
     out.html
     out.head
       out.title.w("Log stats viewer").titleEnd
-      //out.includeJs(`/pod/sys/sys.js`)
-      out.includeJs(`http://127.0.0.1/sys.js`) // TODO: temp (has fix for http://hg.fandev.org/fan-1.0/rev/77f2fce9452d )
+      out.includeJs(`/pod/sys/sys.js`)
+      //out.includeJs(`http://127.0.0.1/sys.js`) // TODO: temp (has fix for http://hg.fandev.org/fan-1.0/rev/77f2fce9452d )
       out.includeJs(`/pod/concurrent/concurrent.js`)
       out.includeJs(`/pod/web/web.js`)
       out.includeJs(`/pod/gfx/gfx.js`)
@@ -133,8 +133,8 @@ class TestWindow : Window
 {
   new make() : super(null, null)
   {
-	GraphPane pane1 := GraphPane(Size(520, 350))
-	GraphPane pane2 := GraphPane(Size(520, 350))
+	GraphPane pane1 := GraphPane(Size(350, 250))
+	GraphPane pane2 := GraphPane(Size(350, 250))
 
 	logReq := LogQueryRequest("monthHits",["2007","6"])
 	HttpReq { uri=`/data`;}.post(logReq.toStr) |res| { pane1.updateData(res.content.in.readObj) }
@@ -142,27 +142,39 @@ class TestWindow : Window
 	logReq2 := LogQueryRequest("monthPageHits",["2007","6"/*,100*/]) // TODO: add a limit option (# of items)
 	HttpReq { uri=`/data`;}.post(logReq2.toStr) |res| { pane2.updateData(res.content.in.readObj) }
 
-	content = GridPane
-	{
+	content = ScrollPane
+    {
+    InsetPane
+    {
+      GridPane
+      {
 		numCols = 2
 		expandCol = 1
 		valignCells = Valign.top
 		hgap = 25
-		GridPane
-		{
+		BorderPane{
+          insets = Insets(10)
+          border = Border("2 #008 10")
+          bg = Color("#9999ff")
+          GridPane
+          {
 			Button{text="My Favorites"},
 			Button{text="Live Stats"},
 			Button{text="Total Hits"},
 			Button{text="Top Pages"},
 			Button{text="Top Referers"},
-		},
+          },
+        },
 
 		GridPane
 		{
+            numCols = 2
 			pane1,
 			pane2,
 		},
-	}
+	  },
+      },
+    }
   }
 
   Void main()
