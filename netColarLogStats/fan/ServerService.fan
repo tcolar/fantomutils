@@ -129,16 +129,11 @@ const class ServeData : WebMod
 @Js
 class TestWindow : Window
 {
+	internal const Int baseWidth := 700
+
   new make() : super(null, null)
   {
-	GraphPane pane1 := GraphPane(Size(350, 250))
-	GraphPane pane2 := GraphPane(Size(700, 350))
-
-	//logReq := LogQueryRequest("monthHits",["2007","6"])
-	//HttpReq { uri=`/data`;}.post(logReq.toStr) |res| { pane1.updateData(res.content.in.readObj) }
-
-	logReq2 := LogQueryRequest("monthPageHits",["2007","6"/*,100*/]) // TODO: add a limit option (# of items)
-	HttpReq { uri=`/data`;}.post(logReq2.toStr) |res| { pane2.updateData(res.content.in.readObj) }
+	view := LogHitsView()
 
 	content = ScrollPane
     {
@@ -164,15 +159,11 @@ class TestWindow : Window
           },
         },
 
-		GridPane
-		{
-            numCols = 1
-			//pane1,
-			pane2,
-		},
+		view.viewPane,
 	  },
       },
     }
+	view.fetchData
   }
 
   Void main()
