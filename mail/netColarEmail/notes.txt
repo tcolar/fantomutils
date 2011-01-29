@@ -1,0 +1,58 @@
+http://fantom.org/doc/email/SmtpClient.html
+
+http://www.vanemery.com/Protocols/SMTP/smtp.html
+SMTP : http://tools.ietf.org/html/rfc2821
+IMAP : http://tools.ietf.org/html/rfc3501
+
+
+==============SMTP======================
+
+
+==============IMAP Impl notes======================
+
+Certain characters, currently the double-quote and the backslash, may
+   not be sent as-is inside a quoted string.  These characters must be
+   preceded by the escape character if they are in a quoted string, or
+   else the string must be sent as a literal
+
+ The CR and LF characters may be sent ONLY in literals; they are not
+   allowed, even if escaped, inside quoted strings.
+
+   And while we're talking about special characters: the IMAP spec, in
+   the section titled "Mailbox International Naming Convention",
+   describes how to encode mailbox names in modified UTF-7 [UTF-7 and
+   RFC-2060].
+
+The server should maintain UIDs permanently for all messages if it
+   can.  If that's not possible, the server must change the UIDVALIDITY
+   value for the mailbox whenever any of the UIDs may have become
+   invalid.
+
+UIDs are not unique between mailboxes; they are only unique
+   WITHIN a given mailbox.
+
+ When a client asks for certain information in a FETCH command, the
+   server may return the requested information in any order, not
+   necessarily in the order that it was requested.  Further, the server
+   may return the information in separate FETCH responses and may also
+   return information that was not explicitly requested (to reflect to
+   the client changes in the state of the subject message
+
+ Some back-end mail stores keep the mail in a canonical form, rather
+   than retaining the original MIME format of the messages ...also may mean that the server has no convenient
+   way to know the RFC822.SIZE of the message
+
+If the server allows multiple connections to the same mailbox, it is
+   often possible for messages to be expunged in one client unbeknownst
+   to another client : RFC2180
+
+Many implementers of both clients and servers are confused by the
+   "reference name" on the LIST command.  The reference name is intended
+   to be used in much the way a "cd" 
+Server implementations must implement the reference argument in a way
+   that matches the intended "change directory" operation as closely as
+   possible
+
+To repeat: a server should use "/", "\", or "." as its hierarchy
+   delimiter.  The use of any other character is likely to cause
+   problems and is STRONGLY DISCOURAGED.

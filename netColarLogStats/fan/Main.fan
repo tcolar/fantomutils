@@ -18,8 +18,8 @@ class Main
     static Void main()
     {
 		//db := SqlService("jdbc:mysql://localhost:3306/fantest", "fantest", "fantest")
-		//db := SqlService("jdbc:h2:~/fantest", "sa", "")
-		db := SqlService("jdbc:hsqldb:file://tmp/fantest", "sa", "")
+		db := SqlService("jdbc:h2:~/fantest", "sa", "")
+		//db := SqlService("jdbc:hsqldb:file://tmp/fantest", "sa", "")
 		//updateStats(db)
 		ServerService(db).run()
 		echo("service done")

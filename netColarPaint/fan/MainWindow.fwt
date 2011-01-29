@@ -1,0 +1,103 @@
+// Artistic License 2.0
+//
+// History:
+//   Oct 1, 2010 thibautc Creation
+//
+
+//
+// Copyright (c) 2009, Brian Frank and Andy Frank
+// Licensed under the Academic Free License version 3.0
+//
+// History:
+//   12 Jun 09  Brian Frank  Creation
+//
+
+using gfx
+using fwt
+using dom::Win
+
+class FPWindow : Window
+{
+  Image backIcon    := Image(`fan://icons/x16/arrowLeft.png`)
+
+  new make() : super(null, null)
+  {
+	content = GridPane
+	{
+	  // seems like ALL next 4 lines needed for it to show properly in browser
+	  halignCells = Halign.fill
+	  valignCells = Valign.fill
+	  expandCol = 0
+	  expandRow = 1
+
+	  FPToolBar(),
+	  FPCanvas(),
+	}
+  }
+
+  Void main()
+  {
+    open
+  }
+}
+
+** Toolbar not implemented in Js, so make own (just a gridpane)
+class FPToolBar : GridPane
+{
+	new make()
+	{
+		numCols = 2;
+		add(Button { text="a" })
+		add(Button { text="b" })
+	}
+}
+
+class FPCanvas : Canvas
+{
+  Point[] points := [,]
+
+  new make()
+  {
+	mDownEvt := |Event e|
+	{
+	  //dumpObj(e)
+	  points.add(e.pos)
+	  repaint(Rect(e.pos.x, e.pos.y, 5, 5))
+	}
+	onMouseDown.add(mDownEvt)
+  }
+
+  override Void onPaint(Graphics g)
+  {
+    w := size.w
+    h := size.h
+
+    g.antialias = true
+
+    g.brush = Gradient("0% 0%, 100% 100%, #fff, #666")
+    g.fillRect(0, 0, w, h)
+
+    g.brush = Color.black;
+	g.drawRect(0, 0, w-1, h-1)
+	g.drawRect(50, 50, 100, 100)
+
+	g.brush = Color.red
+	points.each |Point p| {	g.fillOval(p.x, p.y, 5, 5) }
+  }
+
+  ** Debugging
+  Void dumpObj(Obj o)
+  {
+	StrBuf s := StrBuf()
+	s.add(o.toStr)
+	s.add("\n")
+
+	o.typeof.fields.each |Field f|
+	{
+	  v := f.get(o)
+	  s.add("$f -> $v \n")
+	}
+	Win.cur.alert(s.toStr)
+  }
+
+}
