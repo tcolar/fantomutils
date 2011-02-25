@@ -1,0 +1,83 @@
+Return-Path: thibautc@abc.com
+To: tcolar@colar.net
+Date: Fri, 25 Feb 2011 18:49:26 -0500
+Subject: small img
+Envelope-To: tcolar@abc.net
+Message-ID: <4D684006.4000701@abc.com>
+From: "Thibaut Colar" <thibautc@abc.com>
+Organization: www
+Received: from mercury.abc.com (sea-170.abc.com [65.167.229.170])
+	by abc.net; Fri, 25 Feb 2011 18:48:59 -0500
+Received: from mercury.abc.com (localhost [127.0.0.1])
+	by mercury.abc.com (Postfix) with ESMTP id 8AFD98C451C
+	for <tcolar@abc.net>; Fri, 25 Feb 2011 15:48:58 -0800 (PST)
+Received: from [10.10.1.188] (frenchie.abc.com [10.10.1.188])
+	by mercury.abc.com (Postfix) with ESMTP id 711EC8C4613
+	for <tcolar@abc.net>; Fri, 25 Feb 2011 15:48:55 -0800 (PST)
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.13) Gecko/20101208 Thunderbird/3.1.7
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------000900040404000603020506"
+X-AV-Checked: ClamAV using ClamSMTP
+
+This is a multi-part message in MIME format.
+--------------000900040404000603020506
+Content-Type: multipart/alternative;
+ boundary="------------020407070704070203060207"
+
+
+--------------020407070704070203060207
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Here is a *small* image:
+
+
+--------------020407070704070203060207
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  </head>
+  <body bgcolor="#ffffff" text="#000000">
+    Here is a <b>small</b> image:<br>
+    <br>
+  </body>
+</html>
+
+--------------020407070704070203060207--
+
+--------------000900040404000603020506
+Content-Type: image/jpeg;
+ name="dummy_small.jpg"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="dummy_small.jpg"
+
+/9j/4AAQSkZJRgABAQEASABIAAD/4QAWRXhpZgAATU0AKgAAAAgAAAAAAAD//gAXQ3JlYXRl
+ZCB3aXRoIFRoZSBHSU1Q/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxER
+ExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4e
+Hh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgAKAAo
+AwEiAAIRAQMRAf/EABsAAAICAwEAAAAAAAAAAAAAAAAHBggBBAUD/8QALBAAAQMDAwMDBAID
+AAAAAAAAAQIDBAAFEQYSIQcxQRMiURQkYZEIcSNCYv/EABcBAAMBAAAAAAAAAAAAAAAAAAID
+BAX/xAAgEQACAgICAgMAAAAAAAAAAAABAgADESEEEhMxIiNR/9oADAMBAAIRAxEAPwCxhxjO
+KrB1/wCrU9jVDlns012PHgOAH0VYK3AeST8A9hT/AOpN7lac0Rdb1CYS/JisFTSFAlO7IGTj
+wM5qkEqdBnOyptybkPTpBK8sgbNx5JJ7/Pk0rGTuFO2vqTqN/wC7Vdp39mT7v1Uy6N9WrjB1
+Li4S35ESQ59wHFbu/wDtWxEY6ON6egOSNM3CRJcjguKadUffjkE7wByCBwOOcUsJMmNHmSkQ
+rdIhK9ZQiJaWpwhO44C8qPIHHajKqPUGX9aWh1lDrSwpC0hSVDsQexoqA/x+u12vPT9h67Ba
+lNLLTLikbdzYAxxgdqKHcKHWu5zIlgjWq3pCpF1dWwASRlIQTjgdidoP4J5FJHSGjdNXDTtk
+uc5hcqXJYd9UKX7QpK9vA8eacPWRTV4tcY2G4MSZ8X1z6LLuVqQplSSU44yk7VYPfFV+05cb
+npqJP+gjP3WIggsrcBSljk5GceVEcCl3I7J9fuFWwDfKTO/QG7NGatFqjITBcSXltrG73+7z
+37frJ+aiOmpNpm61iadn2SN6SFFwuNrKNvtz7h5PHzWYVz1LLKIt6QqPPZWpttUlGA6jJOMj
+GSPkDFcqVpmZcESXvq220KmIJU0gblKKCSkncFYCU8cEZz2pFdVhJVm3j9lLsnjDKI7v4n3W
+XPRe477zq2WmoymkqUSBlTuTjwTx+hRWl0RvqtJXtq1XK1KW1eYzaYspg7lfbNgFJRjkHJVu
+B5zRVjDB0JGDPO0X25S9NvX/AEvcrLMMdsuqTMt/+VtSRkpJbUkZ7904NLzX7F6Fnj/QxENw
+4zaFuGMgLQ+gpSEuAkZxjbkf9jjHNFFV3oFcqIqpiygmRKFcb1cI6ZCC2EIOEuLYAQjlPlXt
+ByR58/mut0+i3iTqm3uuBTrUpzCVLwlKQAQVbf6Uccc4/FFFTBQDqO7EjcamuJ1iterzKmJQ
+u36ctyWm2cA7pD2NqB+QhAz8Zooora4XFrsq7NM++1lfAn//2Q==
+--------------000900040404000603020506--
+
