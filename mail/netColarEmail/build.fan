@@ -15,7 +15,7 @@ class Build : BuildPod
   {
     podName = "netColarEmail"
     summary = "Mail server"
-    depends = ["sys 1.0", "netColarSmtpServer 1.0", "netColarImapServer 1.0"]
-    srcDirs = [`fan/`, `test/`]
+    depends = ["sys 1.0", /*"netColarSmtpServer 1.0", "netColarImapServer 1.0"*/]
+    srcDirs = [`fan/`, `fan/maildir/`, `test/`]
   }
 }
