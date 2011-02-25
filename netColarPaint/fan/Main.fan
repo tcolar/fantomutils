@@ -18,7 +18,7 @@ using compilerJs
 class PaintDemo : AbstractMain
 {
   @Opt { help = "http port" }
-  Int port := 8080
+  Int port := 8090
 
   override Int run()
   {
