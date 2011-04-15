@@ -11,7 +11,13 @@ class Main
   // TODO: Once I have an imap server implementation, use that for testing ?
   Void main()
   {
-    props := File(`/tmp/imap.props`).readProps
+    SmtpInterceptor i := SmtpInterceptor()
+    i.port = 8900
+    i.forward = 25
+    i.host = "mail.colar.net"
+    i.run
+    Actor.sleep(1day)
+    /*props := File(`/tmp/imap.props`).readProps
     host := props.get("host")
     user := props.get("user")
     pass := props.get("pass")
@@ -33,7 +39,7 @@ class Main
     server.logout
     Actor.sleep(3sec)
     server.disconnect
-    echo("done")
+    echo("done")*/
   }   
   
 }
