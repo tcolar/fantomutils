@@ -8,14 +8,14 @@
 ** Allows for Easy, documented settings files
 ** 
 ** All fields with the Facet "Setting" will be saved (using serialization: writeObj/ReadObj)
-** Note: It even works with "Complex" serialized obects, although it is less user friendly (better to stic to "simples")
+** Note: It even works with "Complex" serialized obects, although it is less user friendly (better to stick to "simples")
 **
 abstract class Settings
 {
   ** Line comment char (default: #)
   virtual Str commentChar := "#"
 
-  **   ** Comments to show at the top of the file
+  ** Comments to show at the top of the file
   ** commentChar  will be prepanded to each line
   virtual Str[] headComments := [,]
 
