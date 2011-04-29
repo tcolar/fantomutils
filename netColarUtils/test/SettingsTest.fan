@@ -10,7 +10,7 @@ class SettingsTest : Test
   Void testSettings()
   {
     s := MySettings()
-    f := File(`/tmp/settings.txt`)//.deleteOnExit
+    f := File(`/tmp/settings.txt`).deleteOnExit
     s.save(f.out)
     
     // save & read
