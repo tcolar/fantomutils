@@ -54,6 +54,10 @@ class SettingsTest : Test
     lines = f.readAllLines
     verifyEq(lines[0], "# Custom comment 1")
     verifyEq(lines[-1], "# Custom comment 2")
+    
+    // check nullable exception
+    s3 := BrokenSettings()
+    verifyErr(Err#) { s3.update(f) }
   }
   
   ** Validate s and s2 have the same values
@@ -84,21 +88,28 @@ class MySettings : Settings
   @Setting
   Int port := 8080
   
-  @Setting{help = ["The host"] ; defaultVal = "127.0.01"}
+  @Setting{help = ["The host"]; category = "server"}
   Str host := "127.0.0.1"
   
-  @Setting{help = ["The paths", "That's just a test"] ; defaultVal = ["path1", "path2"]}
+  @Setting{help = ["The paths", "That's just a test"]}
   Str[] paths := ["path1", "path2"] 
   
   @Setting{help = ["It's complicated"] }
-  Complex complex := Complex()
+  ComplexSetting complex := ComplexSetting()
   
-  Int notSaved := 5
+  Int notSaved := 5  
+}
+
+class BrokenSettings : Settings
+{
+  @Setting{help = ["Nullable"] }
+  Int? Nullable
 }
 
 @Serializable
-class Complex
+class ComplexSetting
 {
   Str bar := "bar"
   Int foo := 5
+  Str? someNullThing
 }

@@ -8,6 +8,8 @@
 ** Allows for Easy, documented settings files
 ** 
 ** All fields with the Facet "Setting" will be saved (using serialization: writeObj/ReadObj)
+** Fields with rge Setting Facet can NOT be nullable.
+** If there is a default value it will be displayed as well (as a comment in saved file)
 ** Note: It even works with "Complex" serialized obects, although it is less user friendly (better to stick to "simples")
 **
 abstract class Settings
@@ -141,13 +143,16 @@ abstract class Settings
     {
       lines.add("$commentChar $str")
     }
-    if( ! (setting.defaultVal is Str) || ! (setting.defaultVal as Str).isEmpty )
+    defVal := field.get(this.typeof.make)
+    if( defVal != null )
     {
-      defVal := serializeOneLine(setting.defaultVal)
-      lines.add("$commentChar Default value : $defVal")        
+      lines.add("$commentChar Default value : " + serializeOneLine(defVal))        
     }
-    val := serializeOneLine(field.get(this))
-    lines.add("$field.name = $val")
+    val := field.get(this)
+    if(val != null)
+    {
+      lines.add("$field.name = " + serializeOneLine(field.get(this)))
+    }
     return lines
   }
   
@@ -161,17 +166,25 @@ abstract class Settings
   ** Get all the fields with a Setting facet
   private Field[] getSettingFields()
   {
-    Type.of(this).fields.findAll |f| { f.hasFacet(Setting#) }
+    fields := Type.of(this).fields.findAll |f| { f.hasFacet(Setting#) }
+    fields.each |field| 
+    {
+      if(field.type.isNullable)
+        throw Err("Setting Facet can only be used on non nullable fields. Nullable : $field.qname")
+    }
+    return fields
   }      
 }
 
 ** Facet for a specific setting
+** NOTE: Not allowed on Nullables
 facet class Setting
 {
   ** Help/comments about this Setting (lines of text) will show as comments
   const Str[] help := [,]
 
-  ** Default value (empty string for none)
-  ** Will be shown in comments as well
-  const Obj defaultVal := ""  
+  ** Can be used to categorize the settings when presenting them to the user in a settings UI
+  ** Default:Null (none)
+  ** Does NOT show in the saved settings file
+  const Str? category  
 }
