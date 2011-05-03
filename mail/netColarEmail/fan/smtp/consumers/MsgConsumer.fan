@@ -1,13 +1,14 @@
+// History:
+//   May 2, 2011 thibaut Creation
+//
 using inet
 
 **
-** LogConsumer
+** MsgConsumer
+** Intercept a message and create a MailMessage from It
 **
-class LogConsumer : SmtpDataConsumer
+class MsgConsumer : SmtpDataConsumer
 {
-  DateTime? startTime
-  Str? addr
-  
   override Void onStart(TcpSocket socket)
   {
     startTime = DateTime.now
@@ -21,7 +22,7 @@ class LogConsumer : SmtpDataConsumer
     echo("Processed Smtp transaction from $addr in $time")
   }
   
-  override Void inData(Buf buf)  {echo(">> "+buf.readAllLines)}
+  override Void inData(Buf buf)  {}
   
-  override Void outData(Buf buf) {echo("<< "+buf.readAllLines)}
+  override Void outData(Buf buf) {}
 }

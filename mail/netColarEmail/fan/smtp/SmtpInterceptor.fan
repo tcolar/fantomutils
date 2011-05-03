@@ -6,7 +6,8 @@ using concurrent
 using inet
 
 **
-** Main 
+** Smtp server passthrough / relay
+** "Intercepts" the data for processing. 
 ** 
 class SmtpInterceptor : AbstractMain
 { 
@@ -35,7 +36,7 @@ class SmtpInterceptor : AbstractMain
     {
       itc.start
 	    //Actor.sleep(Duration.maxVal)
-      echo("Started on $port [to $host : $forward]")
+      echo("Interceptor started on $port [to $host : $forward]")
       return 0
     }
     catch(Err e)

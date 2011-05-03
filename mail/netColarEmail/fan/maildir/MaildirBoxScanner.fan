@@ -56,6 +56,6 @@ class MaildirBoxScanner
           
       return boxes
     }
-    throw Err("The folder does not appear to be a valid maildir directory.");
+    throw Err("The folder does not appear to be a valid maildir directory : "+folder);
   }
 }
