@@ -4,6 +4,8 @@
 //   1-Mar-2011 thibautc Creation
 //
 
+using email
+
 **
 ** MsgParser : Parse a Mail message (text data) into a MailMsg object
 ** TODO: see: http://imapwiki.org/ImapTest/Examples
@@ -17,7 +19,7 @@ class MsgParser
   ** Comments: anywhere except within quoted string (can be nested)
   const Regex comment := Regex<|(.*)|>
   ** Folding whitespace (CR + LF + one or more whitespaces)
-  const Regex FoldingWS := Regex<|\r\n\s+|> 
+  //const Regex FoldingWS := Regex<|\r\n\s+|> 
   ** alphaText, US ACSII chars except secialChars
   ** Note '-' needs to be first or last to be traited as a litteral
   const Regex atext := Regex<|[a-zA-Z0-9#$%&*+/=?^_`{}|~-]|>
@@ -80,9 +82,13 @@ class MsgParser
                        %d94-126 /         ;  characters not including
                        obs-dtext          ;  "[", "]", or "\"               
    */                     
-  static MailMessage? decode(InStream in)
+  MailMessage decode(InStream in)
   {
-    return null
+    msg := MailMessage()
+    msg.headers = decodeHeaders(in)
+    msg.email = decodeBody(in)
+    return msg
+    
     // TODO
     // Unfolding to be done first
     /*
@@ -100,4 +106,70 @@ class MsgParser
     */
   }
   
+  ** Decode all the headers (Until a blank line)
+  MailHeader[] decodeHeaders(InStream in)
+  {
+    // TODO: deal with comments, quoted string and the other anoyances (RFC section 3,4, especially 3.6)
+    MailHeader[] headers := [,]
+
+    line := readUnfoldedLine(in)
+    while(!line.isEmpty)
+    {
+      header := decodeHeader(line)
+      if(header != null)
+      {
+        headers.add(header)
+      }
+      line = readUnfoldedLine(in)
+    }
+    return headers
+  }
+  
+  ** Decode a single hear line into a Header object
+  MailHeader? decodeHeader(Str header)
+  {
+    col := header.index(":")
+    if(col != null)
+    {
+      name := header[0 ..< col].trim
+      val := header.size >= col ? header[col+1 .. -1].trim : ""
+      return MailHeader(name, val)
+    }
+    else
+    {
+      echo("Invalid header : $header")
+    }
+    return null
+  }
+  
+  ** Decode the email body
+  Email decodeBody(InStream in)
+  {
+    email := Email()
+    // TODO
+    return email
+  }
+  
+  ** If a line ends with whitespace (space or tab) it's a "folded" line
+  Str readUnfoldedLine(InStream in)
+  {
+    buf := StrBuf()
+    while(true)
+    {
+      line := in.readLine
+      if(line == null)
+       break;
+     
+      buf.add(line)
+      
+      char := in.peekChar
+      if(char == ' ')
+        buf.add(' ')
+      else if(char == '\t')
+        buf.add('\t')
+      else
+        break;
+    }
+    return buf.toStr 
+  }
 }

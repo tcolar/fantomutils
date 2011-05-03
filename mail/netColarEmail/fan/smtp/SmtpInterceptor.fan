@@ -241,11 +241,15 @@ const class SmtpPipeActor : Actor
           data.seek(0)
           consumers.each 
           {
-            if(goingIn)
-              it.inData(data)
-            else
-              it.outData(data)
-					}
+            try
+            {
+              if(goingIn)
+                it.inData(data)
+              else
+                it.outData(data)
+            }
+            catch(Err e) {e.trace}
+            }
 					buf.clear
 					sleep(10ms)
 				}
@@ -257,9 +261,9 @@ const class SmtpPipeActor : Actor
     }
     
     try{in.close} catch(Err e) {}
-    try{out.close} catch(Err e) {}
+      try{out.close} catch(Err e) {}
     
-    echo("Done")
+      echo("Done")
     
 	  return null
 	}
