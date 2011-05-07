@@ -7,12 +7,73 @@
 **
 ** Test and test data for parsing email messages according to RFC 5322
 **
-class MsgParserTest
+class MsgParserTest : Test
 {
+  MsgParser m := MsgParser()
   
-  Void testParser()
+  Void testIsMethods()
+  {    
+    verifyFalse(m.isAtext('@'))
+    verify(m.isAtext('`'))
+    verify(m.isAtext('3'))
+    verify(m.isAtext('a'))
+    verify(m.isAtext('k'))
+    verify(m.isAtext('Z'))
+    verify(m.isAtext('D'))    
+    
+    verifyFalse(m.isVchar('\n'))
+    verify(m.isVchar('a'))
+    verify(m.isVchar('\u007E'))
+    verify(m.isVchar('\u0052'))
+    verifyFalse(m.isVchar('\u0002'))
+    
+    verify(m.isWsp(' '))
+    verifyFalse(m.isWsp('a'))
+    verify(m.isWsp('\t'))
+    verifyFalse(m.isWsp('6'))   
+  }
+  
+  Void testReaders()
   {
-    // TODO
+    in := "@,^&*(((".in
+    verifyEq(m.readAtext(in), "")    
+    verifyEq(in.peekChar, '@')
+    in = Str<|0123?$_abcDEF578 *+.|>.in
+    verifyEq(m.readAtext(in), Str<|0123?$_abcDEF578|>)
+    verifyEq(in.peekChar, ' ')
+    
+    in = " \t z".in
+    verifyEq(m.readWsp(in), " \t ")
+    in = "zz".in
+    verifyEq(m.readWsp(in), "")
+    
+    in = " \t\r\n \r\n\t \rz".in
+    verifyEq(m.readFoldingWs(in)," \t\r\n \r\n\t ")
+    verifyEq(in.peekChar, '\r')
+    in = "\\tz".in
+    verifyEq(m.readQuotedPair(in),"\\t")
+    verifyEq(in.peekChar, 'z')
+    in = "\\".in
+    verifyEq(m.readQuotedPair(in),"")
+    verifyEq(in.peekChar, '\\')
+    
+    // ctext: %d33-39 / %d42-91 / %d93-126 /obs-ctext
+    in = "\u0021\u0027\u002A\u005B\u005D\u007E\u0001".in
+    verifyEq(m.readCtext(in),"\u0021\u0027\u002A\u005B\u005D\u007E")
+    verifyEq(in.peekChar, '\u0001')
+
+    in = 
+"this
+  is
+ \t \t still
+   the
+ \t same
+ \t\t  line
+ Not any more".in
+    verifyEq(m.readUnfoldedLine(in), "this is\t \t still  the\t same\t\t  line")
+    verifyEq(m.readUnfoldedLine(in), "Not any more")
+
+    //m.readCcontent(in)
   }
   
 // ************  Test Data (From RFC 5322) *************************************  

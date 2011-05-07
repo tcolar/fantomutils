@@ -7,81 +7,12 @@
 using email
 
 **
-** MsgParser : Parse a Mail message (text data) into a MailMsg object
-** TODO: see: http://imapwiki.org/ImapTest/Examples
+** MsgParser : Parse a Mail message (data) into a MailMsg object
 ** See RFC 5322
 **
 class MsgParser
 {
-  ** escaped soublequote
-  ** If found within a quoted string(content, qcontent), this is just a (non-ending) quote
-  const Str escStr := Str<|\"|>
-  ** Comments: anywhere except within quoted string (can be nested)
-  const Regex comment := Regex<|(.*)|>
-  ** Folding whitespace (CR + LF + one or more whitespaces)
-  //const Regex FoldingWS := Regex<|\r\n\s+|> 
-  ** alphaText, US ACSII chars except secialChars
-  ** Note '-' needs to be first or last to be traited as a litteral
-  const Regex atext := Regex<|[a-zA-Z0-9#$%&*+/=?^_`{}|~-]|>
-  ** "sepcial" chars
-  ** Note: ']' needs to be first to be interpreted as a litteral
-  ** TODO: should \ be doubled ??
-  const Regex specials := Regex<|[](){}[:;,."@\\]|>
-  ** ASCII text except '\' and '"'
-  const Regex qtext := Regex<|[\u21\u23-\u5B\u5D-\u7E]|>
-  
-  /*
-  Overall syntax:
-  message         =   (fields / obs-fields)
-                       [CRLF body]
-
-   body            =   (*(*998text CRLF) *998text) / obs-body
-
-   text            =   %d1-9 /            ; Characters excluding CR
-                       %d11 /             ;  and LF
-                       %d12 /
-                       %d14-127
-  
-  CFWS : comment OR FoldingWs
-  ctext: us ascii except '(', ')' , '\'
-  ccontent : ctext / quoted-pair / comment
-  atom            =   [CFWS] 1*atext [CFWS]
-  dot-atom-text   =   1*atext *("." 1*atext)
-  dot-atom        =   [CFWS] dot-atom-text [CFWS]  
-  
-   qcontent        =   qtext / quoted-pair
-   quoted-string   =   [CFWS]
-                       DQUOTE *([FWS] qcontent) [FWS] DQUOTE
-                       [CFWS]
-   word            =   atom / quoted-string
-   phrase          =   1*word / obs-phrase
-   unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct    
-  
-                      address         =   mailbox / group
-
-   mailbox         =   name-addr / addr-spec
-   name-addr       =   [display-name] angle-addr
-   angle-addr      =   [CFWS] "<" addr-spec ">" [CFWS] /
-                       obs-angle-addr
-   group           =   display-name ":" [group-list] ";" [CFWS]
-   display-name    =   phrase
-   mailbox-list    =   (mailbox *("," mailbox)) / obs-mbox-list
-   address-list    =   (address *("," address)) / obs-addr-list
-   group-list      =   mailbox-list / CFWS / obs-group-list    
-
-  Because the list of mailboxes can be empty, using the group construct
-   is also a simple way to communicate to recipients that the message
-   was sent to one or more named sets of recipients, without actually
-   providing the individual mailbox address for any of those recipients.
-   
-   addr-spec       =   local-part "@" domain
-   local-part      =   dot-atom / quoted-string / obs-local-part
-   domain          =   dot-atom / domain-literal / obs-domain
-   domain-literal  =   [CFWS] "[" *([FWS] dtext) [FWS] "]" [CFWS]
-   dtext           =   %d33-90 /          ; Printable US-ASCII
-                       %d94-126 /         ;  characters not including
-                       obs-dtext          ;  "[", "]", or "\"               
-   */                     
+  ** Decode a whole message  
   MailMessage decode(InStream in)
   {
     msg := MailMessage()
@@ -89,18 +20,10 @@ class MsgParser
     msg.email = decodeBody(in)
     return msg
     
-    // TODO
-    // Unfolding to be done first
     /*
-    Since a comment is allowed to
-   contain FWS, folding is permitted within the comment.  Also note that
-   since quoted-pair is allowed in a comment, the parentheses and
-   backslash characters may appear in a comment, so long as they appear
-   as a quoted-pair
- 
-   Runs of FWS, comment, or CFWS that occur between lexical tokens in a
-   structured header field are semantically interpreted as a single
-   space character
+    Runs of FWS, comment, or CFWS that occur between lexical tokens in a
+    structured header field are semantically interpreted as a single
+    space character
  
     Line 790: Datetime parsing -> use Fantom parser ??
     */
@@ -150,7 +73,8 @@ class MsgParser
     return email
   }
   
-  ** If a line ends with whitespace (space or tab) it's a "folded" line
+  ** Read a folded line as a single line
+  ** If the next line starts with whitespace (space or tab), it's a "folded" line
   Str readUnfoldedLine(InStream in)
   {
     buf := StrBuf()
@@ -158,18 +82,265 @@ class MsgParser
     {
       line := in.readLine
       if(line == null)
-       break;
+        break;
      
       buf.add(line)
       
       char := in.peekChar
-      if(char == ' ')
-        buf.add(' ')
-      else if(char == '\t')
-        buf.add('\t')
-      else
+      if( ! (char==' ' || char=='\t'))
         break;
     }
     return buf.toStr 
   }
+  
+  // #####################  RFC 5322 Grammar stuff  ############################
+  
+  const Int[] aChars := ['!','#','$','%','&','\'', '*', '+', '-', '/',
+                        '=', '?', '^', '_', '`', '{', '}', '|']
+  
+  ** 0-9 a-z A-Z and aChars                                   
+  Bool isAtext(Int c)
+  {
+    return  (c >= '0' && c <='9' ) ||
+            (c >= 'a' && c <='z' ) ||
+            (c >= 'A' && c <='Z' ) ||
+            aChars.contains(c)      
+
+  }    
+
+  ** white space: space or tab
+  Bool isWsp(Int char)
+  {
+    return char == ' ' || char == '\t';
+  }
+  
+  ** Printable characters
+  Bool isVchar(Int char)
+  {
+    return (char >= '\u0021' && char <= '\u007E')
+  }
+  
+  Str readWsp(InStream in)
+  {
+    return in.readStrToken(null) |char|
+    {
+      return ! isWsp(char)
+    } 
+  }
+
+  Str readFoldingWs(InStream in)
+  {
+    // space or tab or \r\n
+    Bool afterCr // cariage Return
+    result := in.readStrToken(null) |char|
+    {
+      if (char == '\n' && afterCr)
+      {
+        afterCr = false
+        return false
+      }
+      if (isWsp(char)) 
+      {
+        afterCr = false        
+        return false
+      }
+      if (char == '\r')
+      {
+        afterCr = true
+        return false
+      }
+      return true 
+    } 
+    // if last was a \r without a \n then back one ... spec says that should never happen
+    if(afterCr)
+    {
+      result = result[0..-2]
+      in.unreadChar('\r')
+    }
+      
+    return result
+  }
+  
+  Str readCtext(InStream in)
+  {
+    // %d33-39 / %d42-91 / %d93-126 /obs-ctext
+    // Not dealing with the obs-ctext for now (obsolete))
+    return in.readStrToken(null) |char|
+    {
+      if ((char >= '\u0021' && char <= '\u0027') ||
+          (char >= '\u002A' && char <= '\u005B')||
+        (char >= '\u005D' && char <= '\u007E'))      
+      {
+        return false
+      }
+      return true  
+    } 
+  }
+
+  ** Quoted pair. Ex:   \t  
+  Str readQuotedPair(InStream in)
+  {
+    Bool afterQuote
+    Bool done
+    result := in.readStrToken(null) |char|
+    {
+      if(done)
+        return true
+      if (char == '\\')
+      {
+        afterQuote = true
+        return false
+      }
+      if(afterQuote && (isVchar(char) || isWsp(char)))
+      {
+        afterQuote = false
+        done = true
+        return false 
+      }
+      return true
+    } 
+    if(afterQuote)
+    {
+      result = result[0..-2]
+      in.unreadChar('\\')
+    }
+    return result
+  }
+    
+  Str readCcontent(InStream in)
+  {
+    // ctext / quoted-pair / comment
+    Str found := readCtext(in)
+    if(! found.isEmpty) return found
+      found = readQuotedPair(in)
+    //if(found != null && ! found.isEmpty) return found
+    //  found = readComment(in)
+    if(! found.isEmpty) return found
+      return ""
+  }
+    
+  Str readAtext(InStream in)
+  {
+    return in.readStrToken(null) |char|
+    {
+      return ! isAtext(char)
+    } 
+  }
+
+  
+  //Str readDotAtom(InStream in) { readStuff(in, #peekDotAtom) }
+  
+  /*Int peekDotAtom(InStream in)
+  {
+    //dot-atom-text   =   1*atext *("." 1*atext)
+    //dot-atom        =   [CFWS] dot-atom-text [CFWS]
+    Int skipped := skipChars(in, peekCfws(in))
+    cc := peekAtext(in)
+    if(cc == 0)
+    {
+      unreadChars(in, skipped)
+      return 0
+    }
+    // else
+    skipped += skipChars(in, cc)
+    while(true)
+    {
+      c := in.peekChar
+      if(c == '.')
+      {
+        skipChars(in, 1)
+        at := peekAtext(in)
+        if(at > 0)
+        {
+          skipped += at + 1 // the +1 is for the '.''
+        }
+        else
+        {
+          unreadChars(in, 1) // the dot that was skipped
+          break
+        }
+      }
+      else
+        break
+    }
+    skipped += skipChars(in, peekCfws(in))
+    unreadChars(in, skipped)
+    return skipped      
+  }
+       
+  Str readAtom(InStream in) { readStuff(in, #peekAtom) }
+  
+  Int peekAtom(InStream in)
+  {
+    // [CFWS] 1*atext [CFWS]
+    Int skipped := skipChars(in, peekCfws(in))
+    cc := 0
+    found := false
+    while(true)
+    {
+      skipped += skipChars(in, peekAtext(in))
+      cc = peekAtext(in)
+      skipped += cc
+      if(cc == 0)
+        break
+      else
+        found = true
+    }
+    if(found) 
+      skipped += skipChars(in, peekCfws(in))
+    
+    unreadChars(in, skipped)
+
+    return found ? skipped : 0; 
+  }    
+                  
+  Int peekComment(InStream in)
+  {
+    //"(" *([FWS] ccontent) [FWS] ")"
+    if(in.peekChar != '(')
+      return 0
+    skipped := skipChars(in,1)
+    cc := 0
+    while(true)
+    {
+      skipped += skipChars(in, peekFoldingWs(in))
+      cc = peekCcontent(in)
+      skipped += cc
+      if(cc == 0)
+        break
+    } 
+    skipped += skipChars(in, peekFoldingWs(in))
+    last := in.peekChar
+    unreadChars(in, skipped)
+    return (last == ')') ? skipped + 1  : 0 
+  }
+      
+  Str readComment(InStream in){ readStuff(in, #peekComment) }
+  
+  Int peekCfws(InStream in)
+  {
+    // (1*([FWS] comment) [FWS]) / FWS
+    skipped := 0
+    cc := 0
+    found := false
+    while(true)
+    {
+      skipped += skipChars(in, peekFoldingWs(in))
+      cc = peekCcontent(in)
+      skipped += cc
+      if(cc == 0)
+        break
+      else
+        found = true
+    }
+    if(found)
+      skipped += skipChars(in,peekFoldingWs(in))
+    
+    unreadChars(in, skipped)
+    
+    return found ? skipped : peekFoldingWs(in); 
+  }
+  
+  Str readCfws(InStream in){ readStuff(in, #peekCfws) }
+*/
 }
