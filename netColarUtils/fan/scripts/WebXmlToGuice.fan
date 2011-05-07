@@ -44,7 +44,7 @@ class WebXmlToGuice
     data := File(path).readAllBuf.in 
     root := XParser(data).parseDoc.root
     
-    // first path to look for mappings
+    // first pass to look for mappings
     root.elems.each |xelem| 
     {
       switch(xelem.name)
@@ -56,7 +56,7 @@ class WebXmlToGuice
       }
     }
     
-    // second path ... find servlets and filters and output guice type calls
+    // second pass ... find servlets and filters and output guice type calls
     root.elems.each |xelem| 
     {
       switch(xelem.name)
@@ -69,7 +69,7 @@ class WebXmlToGuice
     }    
   }
   
-  ** Read a mapping xml elements and add it's name to paths mapping to the map 
+  ** Read a mapping xml elements and add it's name-to-paths mapping to the map 
   Void addMapping(Str:Str[] map, XElem xelem, Str nameAttr)
   {
     paths := Str[,]
