@@ -107,7 +107,15 @@ class MsgParser
       aChars.contains(c)      
 
   }    
-
+  
+  ** %d33 / %d35-91 /%d93-126
+  Bool isQtext(Int c)
+  {
+    return  (c=='!' || 
+            (c>='\u0023' && c<='\u005B')||
+            (c>='\u005D' && c<='\u007E'))
+  }
+  
   ** white space: space or tab
   Bool isWsp(Int char)
   {
@@ -125,7 +133,7 @@ class MsgParser
     return in.readStrToken(null) |char|
     {
       return ! isWsp(char)
-    } 
+    } ?: ""
   }
 
   ** space or tab or \r\n
@@ -165,6 +173,7 @@ class MsgParser
   ** Not dealing with the obs-ctext for now (obsolete))
   Str readCtext(InStream in)
   {
+    //TODO: obs-ctext
     return in.readStrToken(null) |char|
     {
       if ((char >= '\u0021' && char <= '\u0027') ||
@@ -374,6 +383,104 @@ class MsgParser
     
     // or FWS          
     return found ? buf.toStr : readFoldingWs(in) 
+  }
+  
+  ** word            =   atom / quoted-string
+  Str readWord(InStream in)
+  {
+    atom := readAtom(in)
+    return atom.isEmpty ? readQuotedString(in) : atom
+  }
+  
+  ** phrase          =   1*word / obs-phrase
+  ** Not dealing with obs-phrase yet
+  Str readPhrase(InStream in)
+  {
+    // TODO: obs-phrase
+    return readWord(in)
+  } 
+
+  **    quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
+  Str readQuotedString(InStream in)
+  {
+    buf := StrBuf().add(readCfws(in))
+    c := in.peekChar
+    if(c != '"')
+    {
+      unread(in, buf.toStr)
+      return ""
+    }
+    // else
+    in.readChar
+    buf.add("\"")
+    while(true)
+    {
+      fws := readFoldingWs(in)
+      cc := readQcontent(in)
+      if(cc.isEmpty)
+      {
+        unread(in, fws)
+        break 
+      }
+      else
+      {
+        buf.add(fws).add(cc)  
+      }
+    }
+    c = in.peekChar
+    if(c != '"')
+    {
+      unread(in, buf.toStr)
+      return ""
+    } 
+    // else
+    in.readChar
+    buf.add("\"")
+    buf.add(readCfws(in))
+    return buf.toStr
+  }  
+
+  ** qcontent        =   qtext / quoted-pair
+  Str readQcontent(InStream in)
+  {
+    t := readQtext(in)
+    return t.isEmpty ? readQuotedPair(in) : t
+  }
+  ** qtext           =   %d33 / %d35-91 /%d93-126 /obs-qtext
+  ** Not dealing with obs-qtext for now
+  Str readQtext(InStream in)
+  {
+    // TODO: obs-qtext
+    return in.readStrToken(null) |char|
+    {
+      return ! isQtext(char)
+    } ?: ""    
+  } 
+    
+  ** unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
+  ** Not dealing with obs-unstruct yet
+  Str readUnstructured(InStream in)
+  {
+    // TODO: obs-unstruct
+    found := false
+    buf := StrBuf()
+    while(true)
+    {
+      buf.add(readFoldingWs(in))
+      char := in.peekChar
+      if( char==null || ! isVchar(char))
+        break        
+      //else
+      found = true
+      buf.add(in.readChar.toChar)
+    }
+    
+    if(found)
+      buf.add(readWsp(in))
+    else
+      unread(in, buf.toStr)
+    
+    return found ? buf.toStr : "" 
   }
   
   Void unread(InStream in, Str str)

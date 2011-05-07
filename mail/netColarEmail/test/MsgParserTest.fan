@@ -31,6 +31,11 @@ class MsgParserTest : Test
     verifyFalse(m.isWsp('a'))
     verify(m.isWsp('\t'))
     verifyFalse(m.isWsp('6'))   
+
+    verify(m.isQtext(';'))
+    verifyFalse(m.isQtext('"'))
+    verify(m.isQtext('\u0077'))
+    verifyFalse(m.isQtext('\u005C'))   
   }
   
   Void testReaders()
@@ -129,6 +134,27 @@ class MsgParserTest : Test
     in = "\r\n  0123?*_abc.DEF578\r\n\t ,66".in
     verifyEq(m.readDotAtom(in), "\r\n  0123?*_abc.DEF578\r\n\t ")
     verifyEq(in.peekChar, ',')
+    
+    // qcontent        =   qtext / quoted-pair
+    in = "\\t.".in
+    verifyEq(m.readQcontent(in), "\\t")
+    verifyEq(in.peekChar, '.')
+    in = "fdsfdsfsd#!\u0064\u0022".in
+    verifyEq(m.readQcontent(in), "fdsfdsfsd#!\u0064")
+    verifyEq(in.peekChar, '\u0022')
+    
+    //quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
+    in = "\"\"z".in
+    verifyEq(m.readQuotedString(in), "\"\"")
+    verifyEq(in.peekChar, 'z')
+    in = " \r\n\t \"\r\n\t dsfdsf131243\"(comment\r\n )\r\n z".in
+    verifyEq(m.readQuotedString(in), " \r\n\t \"\r\n\t dsfdsf131243\"(comment\r\n )\r\n ")
+    verifyEq(in.peekChar, 'z')
+
+    // unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
+    in = " \r\n\t945qbdsff\t\r\n\t 9598409\u0055 abcdf \t \u0007".in
+    verifyEq(m.readUnstructured(in), " \r\n\t945qbdsff\t\r\n\t 9598409\u0055 abcdf \t ")
+    verifyEq(in.peekChar, '\u0007')
   }
   
 // ************  Test Data (From RFC 5322) *************************************  
