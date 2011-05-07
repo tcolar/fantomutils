@@ -73,7 +73,62 @@ class MsgParserTest : Test
     verifyEq(m.readUnfoldedLine(in), "this is\t \t still  the\t same\t\t  line")
     verifyEq(m.readUnfoldedLine(in), "Not any more")
 
-    //m.readCcontent(in)
+    // (1*([FWS] comment) [FWS]) / FWS
+    in = "\t\r\n (blah)\r\n  (foo(\r\n bar)\t )Z".in
+    verifyEq(m.readCfws(in), "\t\r\n (blah)\r\n  (foo(\r\n bar)\t )")
+    verifyEq(in.peekChar, 'Z')
+    in = "\t\r\n  x".in
+    verifyEq(m.readCfws(in), "\t\r\n  ")
+    verifyEq(in.peekChar, 'x')
+    
+    //  ** ccontent : ctext / quoted-pair / comment
+    in = "abcdefg\u0001".in
+    verifyEq(m.readCcontent(in), "abcdefg")
+    verifyEq(in.peekChar, '\u0001')
+    in = "\\xz".in
+    verifyEq(m.readCcontent(in), "\\x")
+    verifyEq(in.peekChar, 'z')
+    in = "(abcdefg\r\n xx)z".in
+    verifyEq(m.readCcontent(in), "(abcdefg\r\n xx)")
+    verifyEq(in.peekChar, 'z')
+    in = "\u0001".in
+    verifyEq(m.readCcontent(in), "")
+    verifyEq(in.peekChar, '\u0001')
+    
+    // ** "(" *([FWS] ccontent) [FWS] ")"
+    in = "(blah\r\n \\?\r\nabcdef\r\n (blah)\r\n )z".in
+    verifyEq(m.readComment(in), "(blah\r\n \\?\r\nabcdef\r\n (blah)\r\n )")
+    verifyEq(in.peekChar, 'z')
+    in = "(\r\n  (blah)\r\n\tz".in
+    verifyEq(m.readComment(in), "")
+    verifyEq(in.peekChar, '(')
+    
+    //  ** [CFWS] 1*atext [CFWS]
+    in = "\t\r\n (blah)\r\n abcdefg\t\r\n (blah)\r\n123456789\u0001".in
+    verifyEq(m.readAtom(in), "\t\r\n (blah)\r\n abcdefg\t\r\n (blah)\r\n123456789")
+    verifyEq(in.peekChar, '\u0001')
+    
+    // dot-atom-text   =   1*atext *("." 1*atext)
+    in = "0123?*_abcDEF578 ".in
+    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578")
+    verifyEq(in.peekChar, ' ')
+    in = "0123?*_abcDEF578.".in
+    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578")
+    verifyEq(in.peekChar, '.')
+    in = "0123?*_abcDEF578.az_{5.d34x ".in
+    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578.az_{5.d34x")
+    verifyEq(in.peekChar, ' ')
+    in = " x".in
+    verifyEq(m.readDotAtomText(in), "")
+    verifyEq(in.peekChar, ' ')
+    
+    // dot-atom        =   [CFWS] dot-atom-text [CFWS]
+    in = "0123?*_abcDEF578.".in
+    verifyEq(m.readDotAtom(in), "0123?*_abcDEF578")
+    verifyEq(in.peekChar, '.')
+    in = "\r\n  0123?*_abc.DEF578\r\n\t ,66".in
+    verifyEq(m.readDotAtom(in), "\r\n  0123?*_abc.DEF578\r\n\t ")
+    verifyEq(in.peekChar, ',')
   }
   
 // ************  Test Data (From RFC 5322) *************************************  

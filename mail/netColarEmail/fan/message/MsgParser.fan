@@ -96,15 +96,15 @@ class MsgParser
   // #####################  RFC 5322 Grammar stuff  ############################
   
   const Int[] aChars := ['!','#','$','%','&','\'', '*', '+', '-', '/',
-                        '=', '?', '^', '_', '`', '{', '}', '|']
+    '=', '?', '^', '_', '`', '{', '}', '|']
   
   ** 0-9 a-z A-Z and aChars                                   
   Bool isAtext(Int c)
   {
     return  (c >= '0' && c <='9' ) ||
-            (c >= 'a' && c <='z' ) ||
-            (c >= 'A' && c <='Z' ) ||
-            aChars.contains(c)      
+      (c >= 'a' && c <='z' ) ||
+      (c >= 'A' && c <='Z' ) ||
+      aChars.contains(c)      
 
   }    
 
@@ -128,9 +128,9 @@ class MsgParser
     } 
   }
 
+  ** space or tab or \r\n
   Str readFoldingWs(InStream in)
   {
-    // space or tab or \r\n
     Bool afterCr // cariage Return
     result := in.readStrToken(null) |char|
     {
@@ -158,23 +158,23 @@ class MsgParser
       in.unreadChar('\r')
     }
       
-    return result
+    return result ?: ""
   }
   
+  ** %d33-39 / %d42-91 / %d93-126 /obs-ctext
+  ** Not dealing with the obs-ctext for now (obsolete))
   Str readCtext(InStream in)
   {
-    // %d33-39 / %d42-91 / %d93-126 /obs-ctext
-    // Not dealing with the obs-ctext for now (obsolete))
     return in.readStrToken(null) |char|
     {
       if ((char >= '\u0021' && char <= '\u0027') ||
-          (char >= '\u002A' && char <= '\u005B')||
-        (char >= '\u005D' && char <= '\u007E'))      
+            (char >= '\u002A' && char <= '\u005B')||
+          (char >= '\u005D' && char <= '\u007E'))      
       {
         return false
       }
       return true  
-    } 
+    } ?: ""
   }
 
   ** Quoted pair. Ex:   \t  
@@ -204,143 +204,180 @@ class MsgParser
       result = result[0..-2]
       in.unreadChar('\\')
     }
-    return result
+    return result ?: ""
   }
     
+  ** ctext / quoted-pair / comment
   Str readCcontent(InStream in)
   {
-    // ctext / quoted-pair / comment
     Str found := readCtext(in)
     if(! found.isEmpty) return found
       found = readQuotedPair(in)
-    //if(found != null && ! found.isEmpty) return found
-    //  found = readComment(in)
+    if(! found.isEmpty) return found
+      found = readComment(in)
     if(! found.isEmpty) return found
       return ""
   }
-    
+  
+  ** Read aText -> See isAtext()  
   Str readAtext(InStream in)
   {
     return in.readStrToken(null) |char|
     {
       return ! isAtext(char)
-    } 
+    } ?: ""
+  }
+  
+  ** dot-atom        =   [CFWS] dot-atom-text [CFWS]
+  Str readDotAtom(InStream in)
+  {
+    buf := StrBuf()
+    found := false
+    buf.add(readCfws(in))
+    cc := readDotAtomText(in)
+    if(cc.isEmpty)
+    {
+      unread(in, buf.toStr)
+      return ""
+    }
+    else
+    {
+      return buf.add(cc).add(readCfws(in)).toStr
+    }
   }
 
-  
-  //Str readDotAtom(InStream in) { readStuff(in, #peekDotAtom) }
-  
-  /*Int peekDotAtom(InStream in)
+  ** dot-atom-text   =   1*atext *("." 1*atext)
+  Str readDotAtomText(InStream in)
   {
-    //dot-atom-text   =   1*atext *("." 1*atext)
-    //dot-atom        =   [CFWS] dot-atom-text [CFWS]
-    Int skipped := skipChars(in, peekCfws(in))
-    cc := peekAtext(in)
-    if(cc == 0)
+    cc := readAtext(in)
+    if(cc.isEmpty)
     {
-      unreadChars(in, skipped)
-      return 0
+      unread(in, cc)
+      return ""
     }
-    // else
-    skipped += skipChars(in, cc)
-    while(true)
+    else
     {
-      c := in.peekChar
-      if(c == '.')
+      buf := StrBuf().add(cc)
+      while(true)
       {
-        skipChars(in, 1)
-        at := peekAtext(in)
-        if(at > 0)
+        c := in.peekChar
+        if(c == '.')
         {
-          skipped += at + 1 // the +1 is for the '.''
+          in.readChar
+          cc2 := readAtext(in)
+          if(cc2.isEmpty)
+          {
+            unread(in, ".") 
+            break 
+          }
+          else
+          {
+            buf.add(".").add(cc2)  
+          }
         }
         else
         {
-          unreadChars(in, 1) // the dot that was skipped
           break
         }
       }
-      else
-        break
-    }
-    skipped += skipChars(in, peekCfws(in))
-    unreadChars(in, skipped)
-    return skipped      
-  }
-       
-  Str readAtom(InStream in) { readStuff(in, #peekAtom) }
+      return buf.toStr
+    }    
+  }    
   
-  Int peekAtom(InStream in)
+  ** [CFWS] 1*atext [CFWS]
+  Str readAtom(InStream in)
   {
-    // [CFWS] 1*atext [CFWS]
-    Int skipped := skipChars(in, peekCfws(in))
-    cc := 0
+    buf := StrBuf()
     found := false
     while(true)
     {
-      skipped += skipChars(in, peekAtext(in))
-      cc = peekAtext(in)
-      skipped += cc
-      if(cc == 0)
+      buf.add(readCfws(in))
+      cc := readAtext(in)
+      if(cc.isEmpty)
         break
-      else
-        found = true
+      //else
+      found = true
+      buf.add(cc)
     }
-    if(found) 
-      skipped += skipChars(in, peekCfws(in))
-    
-    unreadChars(in, skipped)
 
-    return found ? skipped : 0; 
+    if(found)
+      buf.add(readCfws(in))
+    else
+      unread(in, buf.toStr)
+
+    return found ? buf.toStr : ""  
   }    
                   
-  Int peekComment(InStream in)
+                                                        
+  ** "(" *([FWS] ccontent) [FWS] ")"
+  Str readComment(InStream in)
   {
-    //"(" *([FWS] ccontent) [FWS] ")"
+    buf := StrBuf()
     if(in.peekChar != '(')
-      return 0
-    skipped := skipChars(in,1)
-    cc := 0
+      return ""
+      
+    buf.add("(")
+    in.readChar
+
+    found := false    
     while(true)
     {
-      skipped += skipChars(in, peekFoldingWs(in))
-      cc = peekCcontent(in)
-      skipped += cc
-      if(cc == 0)
+      buf.add(readFoldingWs(in))
+      cc := readCcontent(in)
+      if(cc.isEmpty)
         break
+      //else
+      found = true
+      buf.add(cc)
     } 
-    skipped += skipChars(in, peekFoldingWs(in))
-    last := in.peekChar
-    unreadChars(in, skipped)
-    return (last == ')') ? skipped + 1  : 0 
+    
+    if(found)
+    {
+      buf.add(readFoldingWs(in))
+      if(in.peekChar != ')')
+      {
+        found = false
+      }
+      else
+      {
+        in.readChar
+        buf.add(")")
+      }
+    }
+    
+    if(!found)
+      unread(in, buf.toStr)
+      
+    return found ? buf.toStr : ""  
   }
       
-  Str readComment(InStream in){ readStuff(in, #peekComment) }
-  
-  Int peekCfws(InStream in)
+  ** (1*([FWS] comment) [FWS]) / FWS
+  Str readCfws(InStream in)
   {
-    // (1*([FWS] comment) [FWS]) / FWS
-    skipped := 0
-    cc := 0
     found := false
+    buf := StrBuf()
     while(true)
     {
-      skipped += skipChars(in, peekFoldingWs(in))
-      cc = peekCcontent(in)
-      skipped += cc
-      if(cc == 0)
+      buf.add(readFoldingWs(in))
+      cc := readComment(in)
+      if(cc.isEmpty)
         break
-      else
-        found = true
+      //else
+      found = true
+      buf.add(cc)
     }
+    
     if(found)
-      skipped += skipChars(in,peekFoldingWs(in))
+      buf.add(readFoldingWs(in))
+    else
+      unread(in, buf.toStr)
     
-    unreadChars(in, skipped)
-    
-    return found ? skipped : peekFoldingWs(in); 
+    // or FWS          
+    return found ? buf.toStr : readFoldingWs(in) 
   }
   
-  Str readCfws(InStream in){ readStuff(in, #peekCfws) }
-*/
+  Void unread(InStream in, Str str)
+  {
+    str.eachr |char| {in.unreadChar(char)}
+  }
 }
