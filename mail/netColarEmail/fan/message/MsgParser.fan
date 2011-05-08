@@ -12,61 +12,26 @@ using email
 **
 class MsgParser
 {
-  ** Decode a whole message  
-  MailMessage decode(InStream in)
+  InStream in
+  
+  new make(InStream in)
+  {
+    this.in = in    
+  }
+  
+  ** read a whole message  
+  MailMessage readMessage()
   {
     msg := MailMessage()
-    msg.headers = decodeHeaders(in)
-    msg.email = decodeBody(in)
+    {
+        headers = HeadersParser(this).readHeaders
+        email = readBody
+    }
     return msg
-    
-    /*
-    Runs of FWS, comment, or CFWS that occur between lexical tokens in a
-    structured header field are semantically interpreted as a single
-    space character
- 
-    Line 790: Datetime parsing -> use Fantom parser ??
-    */
-  }
-  
-  ** Decode all the headers (Until a blank line)
-  MailHeader[] decodeHeaders(InStream in)
-  {
-    // TODO: deal with comments, quoted string and the other anoyances (RFC section 3,4, especially 3.6)
-    MailHeader[] headers := [,]
-
-    line := readUnfoldedLine(in)
-    while(!line.isEmpty)
-    {
-      header := decodeHeader(line)
-      if(header != null)
-      {
-        headers.add(header)
-      }
-      line = readUnfoldedLine(in)
-    }
-    return headers
-  }
-  
-  ** Decode a single hear line into a Header object
-  MailHeader? decodeHeader(Str header)
-  {
-    col := header.index(":")
-    if(col != null)
-    {
-      name := header[0 ..< col].trim
-      val := header.size >= col ? header[col+1 .. -1].trim : ""
-      return MailHeader(name, val)
-    }
-    else
-    {
-      echo("Invalid header : $header")
-    }
-    return null
   }
   
   ** Decode the email body
-  Email decodeBody(InStream in)
+  Email readBody()
   {
     email := Email()
     // TODO
@@ -75,20 +40,20 @@ class MsgParser
   
   ** Read a folded line as a single line
   ** If the next line starts with whitespace (space or tab), it's a "folded" line
-  Str readUnfoldedLine(InStream in)
+  Str readUnfoldedLine()
   {
     buf := StrBuf()
     while(true)
     {
       line := in.readLine
       if(line == null)
-        break;
+        break
      
       buf.add(line)
       
       char := in.peekChar
       if( ! (char==' ' || char=='\t'))
-        break;
+        break
     }
     return buf.toStr 
   }
@@ -128,7 +93,7 @@ class MsgParser
     return (char >= '\u0021' && char <= '\u007E')
   }
   
-  Str readWsp(InStream in)
+  Str readWsp()
   {
     return in.readStrToken(null) |char|
     {
@@ -137,7 +102,7 @@ class MsgParser
   }
 
   ** space or tab or \r\n
-  Str readFoldingWs(InStream in)
+  Str readFoldingWs()
   {
     Bool afterCr // cariage Return
     result := in.readStrToken(null) |char|
@@ -171,7 +136,7 @@ class MsgParser
   
   ** %d33-39 / %d42-91 / %d93-126 /obs-ctext
   ** Not dealing with the obs-ctext for now (obsolete))
-  Str readCtext(InStream in)
+  Str readCtext()
   {
     //TODO: obs-ctext
     return in.readStrToken(null) |char|
@@ -187,7 +152,7 @@ class MsgParser
   }
 
   ** Quoted pair. Ex:   \t  
-  Str readQuotedPair(InStream in)
+  Str readQuotedPair()
   {
     Bool afterQuote
     Bool done
@@ -217,19 +182,19 @@ class MsgParser
   }
     
   ** ctext / quoted-pair / comment
-  Str readCcontent(InStream in)
+  Str readCcontent()
   {
-    Str found := readCtext(in)
+    Str found := readCtext
     if(! found.isEmpty) return found
-      found = readQuotedPair(in)
+      found = readQuotedPair
     if(! found.isEmpty) return found
-      found = readComment(in)
+      found = readComment
     if(! found.isEmpty) return found
       return ""
   }
   
   ** Read aText -> See isAtext()  
-  Str readAtext(InStream in)
+  Str readAtext()
   {
     return in.readStrToken(null) |char|
     {
@@ -238,30 +203,30 @@ class MsgParser
   }
   
   ** dot-atom        =   [CFWS] dot-atom-text [CFWS]
-  Str readDotAtom(InStream in)
+  Str readDotAtom()
   {
     buf := StrBuf()
     found := false
-    buf.add(readCfws(in))
-    cc := readDotAtomText(in)
+    buf.add(readCfws)
+    cc := readDotAtomText
     if(cc.isEmpty)
     {
-      unread(in, buf.toStr)
+      unread(buf.toStr)
       return ""
     }
     else
     {
-      return buf.add(cc).add(readCfws(in)).toStr
+      return buf.add(cc).add(readCfws).toStr
     }
   }
 
   ** dot-atom-text   =   1*atext *("." 1*atext)
-  Str readDotAtomText(InStream in)
+  Str readDotAtomText()
   {
-    cc := readAtext(in)
+    cc := readAtext
     if(cc.isEmpty)
     {
-      unread(in, cc)
+      unread(cc)
       return ""
     }
     else
@@ -273,10 +238,10 @@ class MsgParser
         if(c == '.')
         {
           in.readChar
-          cc2 := readAtext(in)
+          cc2 := readAtext
           if(cc2.isEmpty)
           {
-            unread(in, ".") 
+            unread(".") 
             break 
           }
           else
@@ -294,14 +259,14 @@ class MsgParser
   }    
   
   ** [CFWS] 1*atext [CFWS]
-  Str readAtom(InStream in)
+  Str readAtom()
   {
     buf := StrBuf()
     found := false
     while(true)
     {
-      buf.add(readCfws(in))
-      cc := readAtext(in)
+      buf.add(readCfws)
+      cc := readAtext
       if(cc.isEmpty)
         break
       //else
@@ -310,16 +275,16 @@ class MsgParser
     }
 
     if(found)
-      buf.add(readCfws(in))
+      buf.add(readCfws)
     else
-      unread(in, buf.toStr)
+      unread(buf.toStr)
 
     return found ? buf.toStr : ""  
   }    
                   
                                                         
   ** "(" *([FWS] ccontent) [FWS] ")"
-  Str readComment(InStream in)
+  Str readComment()
   {
     buf := StrBuf()
     if(in.peekChar != '(')
@@ -331,8 +296,8 @@ class MsgParser
     found := false    
     while(true)
     {
-      buf.add(readFoldingWs(in))
-      cc := readCcontent(in)
+      buf.add(readFoldingWs)
+      cc := readCcontent
       if(cc.isEmpty)
         break
       //else
@@ -342,7 +307,7 @@ class MsgParser
     
     if(found)
     {
-      buf.add(readFoldingWs(in))
+      buf.add(readFoldingWs)
       if(in.peekChar != ')')
       {
         found = false
@@ -355,20 +320,20 @@ class MsgParser
     }
     
     if(!found)
-      unread(in, buf.toStr)
+      unread(buf.toStr)
       
     return found ? buf.toStr : ""  
   }
       
   ** (1*([FWS] comment) [FWS]) / FWS
-  Str readCfws(InStream in)
+  Str readCfws()
   {
     found := false
     buf := StrBuf()
     while(true)
     {
-      buf.add(readFoldingWs(in))
-      cc := readComment(in)
+      buf.add(readFoldingWs)
+      cc := readComment
       if(cc.isEmpty)
         break
       //else
@@ -377,37 +342,37 @@ class MsgParser
     }
     
     if(found)
-      buf.add(readFoldingWs(in))
+      buf.add(readFoldingWs)
     else
-      unread(in, buf.toStr)
+      unread(buf.toStr)
     
     // or FWS          
-    return found ? buf.toStr : readFoldingWs(in) 
+    return found ? buf.toStr : readFoldingWs 
   }
   
   ** word            =   atom / quoted-string
-  Str readWord(InStream in)
+  Str readWord()
   {
-    atom := readAtom(in)
-    return atom.isEmpty ? readQuotedString(in) : atom
+    atom := readAtom
+    return atom.isEmpty ? readQuotedString : atom
   }
   
   ** phrase          =   1*word / obs-phrase
   ** Not dealing with obs-phrase yet
-  Str readPhrase(InStream in)
+  Str readPhrase()
   {
     // TODO: obs-phrase
-    return readWord(in)
+    return readWord
   } 
 
   **    quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
-  Str readQuotedString(InStream in)
+  Str readQuotedString()
   {
-    buf := StrBuf().add(readCfws(in))
+    buf := StrBuf().add(readCfws)
     c := in.peekChar
     if(c != '"')
     {
-      unread(in, buf.toStr)
+      unread(buf.toStr)
       return ""
     }
     // else
@@ -415,11 +380,11 @@ class MsgParser
     buf.add("\"")
     while(true)
     {
-      fws := readFoldingWs(in)
-      cc := readQcontent(in)
+      fws := readFoldingWs
+      cc := readQcontent
       if(cc.isEmpty)
       {
-        unread(in, fws)
+        unread(fws)
         break 
       }
       else
@@ -430,25 +395,25 @@ class MsgParser
     c = in.peekChar
     if(c != '"')
     {
-      unread(in, buf.toStr)
+      unread(buf.toStr)
       return ""
     } 
     // else
     in.readChar
     buf.add("\"")
-    buf.add(readCfws(in))
+    buf.add(readCfws)
     return buf.toStr
   }  
 
   ** qcontent        =   qtext / quoted-pair
-  Str readQcontent(InStream in)
+  Str readQcontent()
   {
-    t := readQtext(in)
-    return t.isEmpty ? readQuotedPair(in) : t
+    t := readQtext
+    return t.isEmpty ? readQuotedPair : t
   }
   ** qtext           =   %d33 / %d35-91 /%d93-126 /obs-qtext
   ** Not dealing with obs-qtext for now
-  Str readQtext(InStream in)
+  Str readQtext()
   {
     // TODO: obs-qtext
     return in.readStrToken(null) |char|
@@ -459,14 +424,14 @@ class MsgParser
     
   ** unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
   ** Not dealing with obs-unstruct yet
-  Str readUnstructured(InStream in)
+  Str readUnstructured()
   {
     // TODO: obs-unstruct
     found := false
     buf := StrBuf()
     while(true)
     {
-      buf.add(readFoldingWs(in))
+      buf.add(readFoldingWs)
       char := in.peekChar
       if( char==null || ! isVchar(char))
         break        
@@ -476,14 +441,14 @@ class MsgParser
     }
     
     if(found)
-      buf.add(readWsp(in))
+      buf.add(readWsp)
     else
-      unread(in, buf.toStr)
+      unread(buf.toStr)
     
     return found ? buf.toStr : "" 
   }
   
-  Void unread(InStream in, Str str)
+  Void unread(Str str)
   {
     str.eachr |char| {in.unreadChar(char)}
   }

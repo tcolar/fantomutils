@@ -6,13 +6,16 @@
 
 **
 ** Test and test data for parsing email messages according to RFC 5322
+** Test the parser level functions
+** More high-level parsing tests in FullMsgParserTest
 **
 class MsgParserTest : Test
 {
-  MsgParser m := MsgParser()
   
   Void testIsMethods()
   {    
+    MsgParser m := MsgParser("".in)
+    
     verifyFalse(m.isAtext('@'))
     verify(m.isAtext('`'))
     verify(m.isAtext('3'))
@@ -40,31 +43,40 @@ class MsgParserTest : Test
   
   Void testReaders()
   {
+    MsgParser? m
     in := "@,^&*(((".in
-    verifyEq(m.readAtext(in), "")    
+    m = MsgParser(in)
+    verifyEq(m.readAtext, "")    
     verifyEq(in.peekChar, '@')
     in = Str<|0123?$_abcDEF578 *+.|>.in
-    verifyEq(m.readAtext(in), Str<|0123?$_abcDEF578|>)
+    m = MsgParser(in)
+    verifyEq(m.readAtext, Str<|0123?$_abcDEF578|>)
     verifyEq(in.peekChar, ' ')
     
     in = " \t z".in
-    verifyEq(m.readWsp(in), " \t ")
+    m = MsgParser(in)
+    verifyEq(m.readWsp, " \t ")
     in = "zz".in
-    verifyEq(m.readWsp(in), "")
+    m = MsgParser(in)
+    verifyEq(m.readWsp, "")
     
     in = " \t\r\n \r\n\t \rz".in
-    verifyEq(m.readFoldingWs(in)," \t\r\n \r\n\t ")
+    m = MsgParser(in)
+    verifyEq(m.readFoldingWs," \t\r\n \r\n\t ")
     verifyEq(in.peekChar, '\r')
     in = "\\tz".in
-    verifyEq(m.readQuotedPair(in),"\\t")
+    m = MsgParser(in)
+    verifyEq(m.readQuotedPair,"\\t")
     verifyEq(in.peekChar, 'z')
     in = "\\".in
-    verifyEq(m.readQuotedPair(in),"")
+    m = MsgParser(in)
+    verifyEq(m.readQuotedPair,"")
     verifyEq(in.peekChar, '\\')
     
     // ctext: %d33-39 / %d42-91 / %d93-126 /obs-ctext
     in = "\u0021\u0027\u002A\u005B\u005D\u007E\u0001".in
-    verifyEq(m.readCtext(in),"\u0021\u0027\u002A\u005B\u005D\u007E")
+    m = MsgParser(in)
+    verifyEq(m.readCtext,"\u0021\u0027\u002A\u005B\u005D\u007E")
     verifyEq(in.peekChar, '\u0001')
 
     in = 
@@ -75,161 +87,107 @@ class MsgParserTest : Test
  \t same
  \t\t  line
  Not any more".in
-    verifyEq(m.readUnfoldedLine(in), "this is\t \t still  the\t same\t\t  line")
-    verifyEq(m.readUnfoldedLine(in), "Not any more")
+    m = MsgParser(in)
+    verifyEq(m.readUnfoldedLine, "this is\t \t still  the\t same\t\t  line")
+    verifyEq(m.readUnfoldedLine, "Not any more")
 
     // (1*([FWS] comment) [FWS]) / FWS
     in = "\t\r\n (blah)\r\n  (foo(\r\n bar)\t )Z".in
-    verifyEq(m.readCfws(in), "\t\r\n (blah)\r\n  (foo(\r\n bar)\t )")
+    m = MsgParser(in)
+    verifyEq(m.readCfws, "\t\r\n (blah)\r\n  (foo(\r\n bar)\t )")
     verifyEq(in.peekChar, 'Z')
     in = "\t\r\n  x".in
-    verifyEq(m.readCfws(in), "\t\r\n  ")
+    m = MsgParser(in)
+    verifyEq(m.readCfws, "\t\r\n  ")
     verifyEq(in.peekChar, 'x')
     
     //  ** ccontent : ctext / quoted-pair / comment
     in = "abcdefg\u0001".in
-    verifyEq(m.readCcontent(in), "abcdefg")
+    m = MsgParser(in)
+    verifyEq(m.readCcontent, "abcdefg")
     verifyEq(in.peekChar, '\u0001')
     in = "\\xz".in
-    verifyEq(m.readCcontent(in), "\\x")
+    m = MsgParser(in)
+    verifyEq(m.readCcontent, "\\x")
     verifyEq(in.peekChar, 'z')
     in = "(abcdefg\r\n xx)z".in
-    verifyEq(m.readCcontent(in), "(abcdefg\r\n xx)")
+    m = MsgParser(in)
+    verifyEq(m.readCcontent, "(abcdefg\r\n xx)")
     verifyEq(in.peekChar, 'z')
     in = "\u0001".in
-    verifyEq(m.readCcontent(in), "")
+    m = MsgParser(in)
+    verifyEq(m.readCcontent, "")
     verifyEq(in.peekChar, '\u0001')
     
     // ** "(" *([FWS] ccontent) [FWS] ")"
     in = "(blah\r\n \\?\r\nabcdef\r\n (blah)\r\n )z".in
-    verifyEq(m.readComment(in), "(blah\r\n \\?\r\nabcdef\r\n (blah)\r\n )")
+    m = MsgParser(in)
+    verifyEq(m.readComment, "(blah\r\n \\?\r\nabcdef\r\n (blah)\r\n )")
     verifyEq(in.peekChar, 'z')
     in = "(\r\n  (blah)\r\n\tz".in
-    verifyEq(m.readComment(in), "")
+    m = MsgParser(in)
+    verifyEq(m.readComment, "")
     verifyEq(in.peekChar, '(')
     
     //  ** [CFWS] 1*atext [CFWS]
     in = "\t\r\n (blah)\r\n abcdefg\t\r\n (blah)\r\n123456789\u0001".in
-    verifyEq(m.readAtom(in), "\t\r\n (blah)\r\n abcdefg\t\r\n (blah)\r\n123456789")
+    m = MsgParser(in)
+    verifyEq(m.readAtom, "\t\r\n (blah)\r\n abcdefg\t\r\n (blah)\r\n123456789")
     verifyEq(in.peekChar, '\u0001')
     
     // dot-atom-text   =   1*atext *("." 1*atext)
     in = "0123?*_abcDEF578 ".in
-    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtomText, "0123?*_abcDEF578")
     verifyEq(in.peekChar, ' ')
     in = "0123?*_abcDEF578.".in
-    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtomText, "0123?*_abcDEF578")
     verifyEq(in.peekChar, '.')
     in = "0123?*_abcDEF578.az_{5.d34x ".in
-    verifyEq(m.readDotAtomText(in), "0123?*_abcDEF578.az_{5.d34x")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtomText, "0123?*_abcDEF578.az_{5.d34x")
     verifyEq(in.peekChar, ' ')
     in = " x".in
-    verifyEq(m.readDotAtomText(in), "")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtomText, "")
     verifyEq(in.peekChar, ' ')
     
     // dot-atom        =   [CFWS] dot-atom-text [CFWS]
     in = "0123?*_abcDEF578.".in
-    verifyEq(m.readDotAtom(in), "0123?*_abcDEF578")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtom, "0123?*_abcDEF578")
     verifyEq(in.peekChar, '.')
     in = "\r\n  0123?*_abc.DEF578\r\n\t ,66".in
-    verifyEq(m.readDotAtom(in), "\r\n  0123?*_abc.DEF578\r\n\t ")
+    m = MsgParser(in)
+    verifyEq(m.readDotAtom, "\r\n  0123?*_abc.DEF578\r\n\t ")
     verifyEq(in.peekChar, ',')
     
     // qcontent        =   qtext / quoted-pair
     in = "\\t.".in
-    verifyEq(m.readQcontent(in), "\\t")
+    m = MsgParser(in)
+    verifyEq(m.readQcontent, "\\t")
     verifyEq(in.peekChar, '.')
     in = "fdsfdsfsd#!\u0064\u0022".in
-    verifyEq(m.readQcontent(in), "fdsfdsfsd#!\u0064")
+    m = MsgParser(in)
+    verifyEq(m.readQcontent, "fdsfdsfsd#!\u0064")
     verifyEq(in.peekChar, '\u0022')
     
     //quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
     in = "\"\"z".in
-    verifyEq(m.readQuotedString(in), "\"\"")
+    m = MsgParser(in)
+    verifyEq(m.readQuotedString, "\"\"")
     verifyEq(in.peekChar, 'z')
     in = " \r\n\t \"\r\n\t dsfdsf131243\"(comment\r\n )\r\n z".in
-    verifyEq(m.readQuotedString(in), " \r\n\t \"\r\n\t dsfdsf131243\"(comment\r\n )\r\n ")
+    m = MsgParser(in)
+    verifyEq(m.readQuotedString, " \r\n\t \"\r\n\t dsfdsf131243\"(comment\r\n )\r\n ")
     verifyEq(in.peekChar, 'z')
 
     // unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
     in = " \r\n\t945qbdsff\t\r\n\t 9598409\u0055 abcdf \t \u0007".in
-    verifyEq(m.readUnstructured(in), " \r\n\t945qbdsff\t\r\n\t 9598409\u0055 abcdf \t ")
+    m = MsgParser(in)
+    verifyEq(m.readUnstructured, " \r\n\t945qbdsff\t\r\n\t 9598409\u0055 abcdf \t ")
     verifyEq(in.peekChar, '\u0007')
   }
   
-// ************  Test Data (From RFC 5322) *************************************  
-  const Str msg := 
-Str<|
-     From: John Doe <jdoe@machine.example>
-     To: Mary Smith <mary@example.net>
-     Subject: Saying Hello
-     Date: Fri, 21 Nov 1997 09:55:06 -0600
-     Message-ID: <1234@local.machine.example>
-     
-     This is a message just to say hello.
-     So, "Hello".|>
-
-  const Str msgReply := 
-Str<|
-     From: Mary Smith <mary@example.net>
-     To: John Doe <jdoe@machine.example>
-     Reply-To: "Mary Smith: Personal Account" <smith@home.example>
-     Subject: Re: Saying Hello
-     Date: Fri, 21 Nov 1997 10:01:10 -0600
-     Message-ID: <3456@example.net>
-     In-Reply-To: <1234@local.machine.example>
-     References: <1234@local.machine.example>
-     
-     This is a reply to your hello.|>  
-
-  const Str msgFwd := 
-Str<|
-     Resent-From: Mary Smith <mary@example.net>
-     Resent-To: Jane Brown <j-brown@other.example>
-     Resent-Date: Mon, 24 Nov 1997 14:22:01 -0800
-     Resent-Message-ID: <78910@example.net>
-     From: John Doe <jdoe@machine.example>
-     To: Mary Smith <mary@example.net>
-     Subject: Saying Hello
-     Date: Fri, 21 Nov 1997 09:55:06 -0600
-     Message-ID: <1234@local.machine.example>
-     
-     This is a message just to say hello.
-     So, "Hello".|> 
-
-  const Str msgTrace := 
-Str<|
-     Received: from x.y.test
-        by example.net
-        via TCP
-        with ESMTP
-        id ABC12345
-        for <mary@example.net>;  21 Nov 1997 10:05:43 -0600
-     Received: from node.example by x.y.test; 21 Nov 1997 10:01:22 -0600
-     From: John Doe <jdoe@node.example>
-     To: Mary Smith <mary@example.net>
-     Subject: Saying Hello
-     Date: Fri, 21 Nov 1997 09:55:06 -0600
-     Message-ID: <1234@local.node.example>
-     
-     This is a message just to say hello.
-     So, "Hello".|>
-
-    const Str msgComments := 
-Str<|
-     From: Pete(A nice \) chap) <pete(his account)@silly.test(his host)>
-     To:A Group(Some people)
-          :Chris Jones <c@(Chris's host.)public.example>,
-              joe@example.org,
-       John <jdoe@one.test> (my dear friend); (the end of the group)
-     Cc:(Empty list)(start)Hidden recipients  :(nobody(that I know))  ;
-     Date: Thu,
-           13
-             Feb
-               1969
-           23:32
-                    -0330 (Newfoundland Time)
-     Message-ID:              <testabcd.1234@silly.test>
-     
-     Testing.|>
 }

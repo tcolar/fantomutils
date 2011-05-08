@@ -25,20 +25,6 @@ class MailMessage
   // TODO: Mime/encoding
 }
 
-** One mail header
-class MailHeader
-{
-  Str name
-  Str value
-  
-  new make(Str name, Str value)
-  {
-    this.name = name
-    this.value = value
-    // TODO: Parse the kind (enum?) like To etc... 
-  }
-}
-
 ** An extension of MailMessage with some smtp info.
 class SmtpMessage : MailMessage
 {
