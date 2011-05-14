@@ -12,11 +12,9 @@ class FullMsgParserTest : Test
 {
   Void testMessages()
   {
-    parser := MsgParser(msgTrace.in)
-    parser.readMessage
-    echo("")
-    parser = MsgParser(msgComments.in)
-    parser.readMessage
+    parser := MsgParser()
+    parser.readMessage(msgTrace.in)
+    parser.readMessage(msgComments.in)
   }
   
   

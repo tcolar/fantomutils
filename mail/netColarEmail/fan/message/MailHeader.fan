@@ -16,9 +16,25 @@ abstract const class MailHeader
   }
 }
 
+
+
+
 const class HeaderFrom : MailHeader
 {
+  // mailbox-list CRLF
   new make() : super("From:","")
-  {}
+  {
+    
+  }
 }
 
+** a maibox (a.k.a email address, possibly named)
+const class MailBox
+{
+  const Str mb
+  
+  new make(Str mb)
+  {
+    this.mb = mb
+  }
+}

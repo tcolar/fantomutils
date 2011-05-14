@@ -12,26 +12,20 @@ using email
 **
 class MsgParser
 {
-  InStream in
-  
-  new make(InStream in)
-  {
-    this.in = in    
-  }
   
   ** read a whole message  
-  MailMessage readMessage()
+  MailMessage readMessage(InStream in)
   {
     msg := MailMessage()
     {
-        headers = HeadersParser(this).readHeaders
-        email = readBody
+        headers = HeadersParser(this).readHeaders(in)
+        email = readBody(in)
     }
     return msg
   }
   
   ** Decode the email body
-  Email readBody()
+  Email readBody(InStream in)
   {
     email := Email()
     // TODO
@@ -40,7 +34,7 @@ class MsgParser
   
   ** Read a folded line as a single line
   ** If the next line starts with whitespace (space or tab), it's a "folded" line
-  Str readUnfoldedLine()
+  Str readUnfoldedLine(InStream in)
   {
     buf := StrBuf()
     while(true)
@@ -93,7 +87,7 @@ class MsgParser
     return (char >= '\u0021' && char <= '\u007E')
   }
   
-  Str readWsp()
+  Str readWsp(InStream in)
   {
     return in.readStrToken(null) |char|
     {
@@ -102,7 +96,7 @@ class MsgParser
   }
 
   ** space or tab or \r\n
-  Str readFoldingWs()
+  Str readFoldingWs(InStream in)
   {
     Bool afterCr // cariage Return
     result := in.readStrToken(null) |char|
@@ -136,7 +130,7 @@ class MsgParser
   
   ** %d33-39 / %d42-91 / %d93-126 /obs-ctext
   ** Not dealing with the obs-ctext for now (obsolete))
-  Str readCtext()
+  Str readCtext(InStream in)
   {
     //TODO: obs-ctext
     return in.readStrToken(null) |char|
@@ -152,7 +146,7 @@ class MsgParser
   }
 
   ** Quoted pair. Ex:   \t  
-  Str readQuotedPair()
+  Str readQuotedPair(InStream in)
   {
     Bool afterQuote
     Bool done
@@ -182,19 +176,19 @@ class MsgParser
   }
     
   ** ctext / quoted-pair / comment
-  Str readCcontent()
+  Str readCcontent(InStream in)
   {
-    Str found := readCtext
+    Str found := readCtext(in)
     if(! found.isEmpty) return found
-      found = readQuotedPair
+      found = readQuotedPair(in)
     if(! found.isEmpty) return found
-      found = readComment
+      found = readComment(in)
     if(! found.isEmpty) return found
       return ""
   }
   
   ** Read aText -> See isAtext()  
-  Str readAtext()
+  Str readAtext(InStream in)
   {
     return in.readStrToken(null) |char|
     {
@@ -203,30 +197,30 @@ class MsgParser
   }
   
   ** dot-atom        =   [CFWS] dot-atom-text [CFWS]
-  Str readDotAtom()
+  Str readDotAtom(InStream in)
   {
     buf := StrBuf()
     found := false
-    buf.add(readCfws)
-    cc := readDotAtomText
+    buf.add(readCfws(in))
+    cc := readDotAtomText(in)
     if(cc.isEmpty)
     {
-      unread(buf.toStr)
+      unread(in, buf.toStr)
       return ""
     }
     else
     {
-      return buf.add(cc).add(readCfws).toStr
+      return buf.add(cc).add(readCfws(in)).toStr
     }
   }
 
   ** dot-atom-text   =   1*atext *("." 1*atext)
-  Str readDotAtomText()
+  Str readDotAtomText(InStream in)
   {
-    cc := readAtext
+    cc := readAtext(in)
     if(cc.isEmpty)
     {
-      unread(cc)
+      unread(in, cc)
       return ""
     }
     else
@@ -238,10 +232,10 @@ class MsgParser
         if(c == '.')
         {
           in.readChar
-          cc2 := readAtext
+          cc2 := readAtext(in)
           if(cc2.isEmpty)
           {
-            unread(".") 
+            unread(in, ".") 
             break 
           }
           else
@@ -259,14 +253,14 @@ class MsgParser
   }    
   
   ** [CFWS] 1*atext [CFWS]
-  Str readAtom()
+  Str readAtom(InStream in)
   {
     buf := StrBuf()
     found := false
     while(true)
     {
-      buf.add(readCfws)
-      cc := readAtext
+      buf.add(readCfws(in))
+      cc := readAtext(in)
       if(cc.isEmpty)
         break
       //else
@@ -275,16 +269,16 @@ class MsgParser
     }
 
     if(found)
-      buf.add(readCfws)
+      buf.add(readCfws(in))
     else
-      unread(buf.toStr)
+      unread(in, buf.toStr)
 
     return found ? buf.toStr : ""  
   }    
                   
                                                         
   ** "(" *([FWS] ccontent) [FWS] ")"
-  Str readComment()
+  Str readComment(InStream in)
   {
     buf := StrBuf()
     if(in.peekChar != '(')
@@ -296,8 +290,8 @@ class MsgParser
     found := false    
     while(true)
     {
-      buf.add(readFoldingWs)
-      cc := readCcontent
+      buf.add(readFoldingWs(in))
+      cc := readCcontent(in)
       if(cc.isEmpty)
         break
       //else
@@ -307,7 +301,7 @@ class MsgParser
     
     if(found)
     {
-      buf.add(readFoldingWs)
+      buf.add(readFoldingWs(in))
       if(in.peekChar != ')')
       {
         found = false
@@ -320,20 +314,20 @@ class MsgParser
     }
     
     if(!found)
-      unread(buf.toStr)
+      unread(in, buf.toStr)
       
     return found ? buf.toStr : ""  
   }
       
   ** (1*([FWS] comment) [FWS]) / FWS
-  Str readCfws()
+  Str readCfws(InStream in)
   {
     found := false
     buf := StrBuf()
     while(true)
     {
-      buf.add(readFoldingWs)
-      cc := readComment
+      buf.add(readFoldingWs(in))
+      cc := readComment(in)
       if(cc.isEmpty)
         break
       //else
@@ -342,37 +336,37 @@ class MsgParser
     }
     
     if(found)
-      buf.add(readFoldingWs)
+      buf.add(readFoldingWs(in))
     else
-      unread(buf.toStr)
+      unread(in, buf.toStr)
     
     // or FWS          
-    return found ? buf.toStr : readFoldingWs 
+    return found ? buf.toStr : readFoldingWs(in) 
   }
   
   ** word            =   atom / quoted-string
-  Str readWord()
+  Str readWord(InStream in)
   {
-    atom := readAtom
-    return atom.isEmpty ? readQuotedString : atom
+    atom := readAtom(in)
+    return atom.isEmpty ? readQuotedString(in) : atom
   }
   
   ** phrase          =   1*word / obs-phrase
   ** Not dealing with obs-phrase yet
-  Str readPhrase()
+  Str readPhrase(InStream in)
   {
     // TODO: obs-phrase
-    return readWord
+    return readWord(in)
   } 
 
   **    quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
-  Str readQuotedString()
+  Str readQuotedString(InStream in)
   {
-    buf := StrBuf().add(readCfws)
+    buf := StrBuf().add(readCfws(in))
     c := in.peekChar
     if(c != '"')
     {
-      unread(buf.toStr)
+      unread(in, buf.toStr)
       return ""
     }
     // else
@@ -380,11 +374,11 @@ class MsgParser
     buf.add("\"")
     while(true)
     {
-      fws := readFoldingWs
-      cc := readQcontent
+      fws := readFoldingWs(in)
+      cc := readQcontent(in)
       if(cc.isEmpty)
       {
-        unread(fws)
+        unread(in, fws)
         break 
       }
       else
@@ -395,25 +389,25 @@ class MsgParser
     c = in.peekChar
     if(c != '"')
     {
-      unread(buf.toStr)
+      unread(in, buf.toStr)
       return ""
     } 
     // else
     in.readChar
     buf.add("\"")
-    buf.add(readCfws)
+    buf.add(readCfws(in))
     return buf.toStr
   }  
 
   ** qcontent        =   qtext / quoted-pair
-  Str readQcontent()
+  Str readQcontent(InStream in)
   {
-    t := readQtext
-    return t.isEmpty ? readQuotedPair : t
+    t := readQtext(in)
+    return t.isEmpty ? readQuotedPair(in) : t
   }
   ** qtext           =   %d33 / %d35-91 /%d93-126 /obs-qtext
   ** Not dealing with obs-qtext for now
-  Str readQtext()
+  Str readQtext(InStream in)
   {
     // TODO: obs-qtext
     return in.readStrToken(null) |char|
@@ -424,14 +418,14 @@ class MsgParser
     
   ** unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
   ** Not dealing with obs-unstruct yet
-  Str readUnstructured()
+  Str readUnstructured(InStream in)
   {
     // TODO: obs-unstruct
     found := false
     buf := StrBuf()
     while(true)
     {
-      buf.add(readFoldingWs)
+      buf.add(readFoldingWs(in))
       char := in.peekChar
       if( char==null || ! isVchar(char))
         break        
@@ -441,14 +435,14 @@ class MsgParser
     }
     
     if(found)
-      buf.add(readWsp)
+      buf.add(readWsp(in))
     else
-      unread(buf.toStr)
+      unread(in, buf.toStr)
     
     return found ? buf.toStr : "" 
   }
   
-  Void unread(Str str)
+  Void unread(InStream in, Str str)
   {
     str.eachr |char| {in.unreadChar(char)}
   }
