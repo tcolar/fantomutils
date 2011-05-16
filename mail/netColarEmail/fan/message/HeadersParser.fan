@@ -68,13 +68,13 @@ class HeadersParser
   }
   
   ** (mailbox *("," mailbox)) / obs-mbox-list
-  MailBox[]? readMailBoxList(InStream in)
+  MailBox[] readMailboxList(InStream in)
   {
     // TODO: obs-mbox-list
-    mb := readMailBox(in)
+    mb := readMailbox(in)
     if(mb == null)
     {
-      return null
+      return [,]
     }
     // else
     boxes := [mb]
@@ -84,10 +84,10 @@ class HeadersParser
         break
       // else
       in.readChar
-      mb = readMailBox(in)
+      mb = readMailbox(in)
       if(mb == null)
       {
-        parser.unread(in,",")
+        parser.unread(in, ",")
         break;
       }
       // else
@@ -97,7 +97,7 @@ class HeadersParser
   }
 
   ** mailbox = name-addr / addr-spec
-  MailBox? readMailBox(InStream in)
+  MailBox? readMailbox(InStream in)
   {
     found := readNameAddr(in)
     if( ! found.isEmpty )
@@ -134,7 +134,14 @@ class HeadersParser
   ** name-addr       =   [display-name] angle-addr
   Str readNameAddr(InStream in)
   {
-    return readDisplayName(in) + readAngleAddr(in)
+    dn := readDisplayName(in)
+    aa := readAngleAddr(in)
+    if(aa.isEmpty)
+    {
+      parser.unread(in, dn)
+      return ""
+    }
+    return dn + aa
   }
     
   ** [CFWS] "<" addr-spec ">" [CFWS] / obs-angle-addr
