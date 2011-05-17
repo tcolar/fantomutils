@@ -40,3 +40,13 @@ class SmtpMessage : MailMessage
   }  
 }
 
+** a Maibox (a.k.a email address, possibly named)
+const class Mailbox
+{
+  const Str mb
+  
+  new make(Str mb)
+  {
+    this.mb = mb
+  }
+}

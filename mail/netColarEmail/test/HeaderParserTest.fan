@@ -21,43 +21,43 @@ class HeaderParserTest : Test
     
     // domain-literal  =   [CFWS] "[" *([FWS] dtext) [FWS] "]" [CFWS]
     in := "  [ 1.2.3.245] z".in
-    verifyEq(p.readDomainLiteral(in), "  [ 1.2.3.245] ")
+    verifyEq(p.readDomainLiteral(in).text, "  [ 1.2.3.245] ")
     verifyEq(in.peekChar, 'z')
     
     // domain          =   dot-atom / domain-literal / obs-domain
     in = "  [ 1.2.3.245] z".in
-    verifyEq(p.readDomain(in), "  [ 1.2.3.245] ")
+    verifyEq(p.readDomain(in).text, "  [ 1.2.3.245] ")
     verifyEq(in.peekChar, 'z')
 
     in = "somserver.potato.co.uk~".in
-    verifyEq(p.readDomain(in), "somserver.potato.co.uk")
+    verifyEq(p.readDomain(in).text, "somserver.potato.co.uk")
     verifyEq(in.peekChar, '~')
     
     // addr-spec       =   local-part "@" domain
     in = "tom@foo.bar.com~".in
-    verifyEq(p.readAddrSpec(in), "tom@foo.bar.com")
+    verifyEq(p.readAddrSpec(in).text, "tom@foo.bar.com")
     verifyEq(in.peekChar, '~')
 
     in = "tom_jerry-mouse&acc@foo_bar.bar-bar.com~".in
-    verifyEq(p.readAddrSpec(in), "tom_jerry-mouse&acc@foo_bar.bar-bar.com")
+    verifyEq(p.readAddrSpec(in).text, "tom_jerry-mouse&acc@foo_bar.bar-bar.com")
     verifyEq(in.peekChar, '~')
 
     in = "tom_jerry-mouse&acc@[123.234.012.123]~".in
-    verifyEq(p.readAddrSpec(in), "tom_jerry-mouse&acc@[123.234.012.123]")
+    verifyEq(p.readAddrSpec(in).text, "tom_jerry-mouse&acc@[123.234.012.123]")
     verifyEq(in.peekChar, '~')
     
     //CFWS] "<" addr-spec ">" [CFWS] / obs-angle-addr
     in = "\t<tom_jerry-mouse&acc@[123.234.012.123]> ~".in
-    verifyEq(p.readAngleAddr(in), "\t<tom_jerry-mouse&acc@[123.234.012.123]> ")
+    verifyEq(p.readAngleAddr(in).text, "\t<tom_jerry-mouse&acc@[123.234.012.123]> ")
     verifyEq(in.peekChar, '~')
     
     //name-addr       =   [display-name] angle-addr
     in = "John Doe\t<tom_jerry-mouse&acc@[123.234.012.123]> ~".in
-    verifyEq(p.readNameAddr(in), "John Doe\t<tom_jerry-mouse&acc@[123.234.012.123]> ")
+    verifyEq(p.readNameAddr(in).text, "John Doe\t<tom_jerry-mouse&acc@[123.234.012.123]> ")
     verifyEq(in.peekChar, '~')
     
     in = "john@doe.com  , jerry-doe@blah.co.uk  , toto@[1.2.3.4], Dude(The) <el@duderino.com> ~".in 
-    MailBox[] boxes := p.readMailboxList(in)   
+    Mailbox[] boxes := p.readMailboxList(in)   
     verifyEq(in.peekChar, '~')
     verifyEq(boxes.size, 4)
     verifyEq(boxes[0].mb, "john@doe.com  ")

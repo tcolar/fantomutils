@@ -12,6 +12,8 @@ using email
 **
 class MsgParser
 {
+  internal const MailNode emptyNode := MailNode(MailNodes.EMPTY, [,])
+  
   
   ** read a whole message  
   MailMessage readMessage(InStream in)
@@ -87,16 +89,16 @@ class MsgParser
     return (char >= '\u0021' && char <= '\u007E')
   }
   
-  Str readWsp(InStream in)
+  MailNode readWsp(InStream in)
   {
-    return in.readStrToken(null) |char|
+    return MailNode.makeLeaf(MailNodes.WSP, in.readStrToken(null) |char|
     {
       return ! isWsp(char)
-    } ?: ""
+    } ?: "")
   }
 
   ** space or tab or \r\n
-  Str readFoldingWs(InStream in)
+  MailNode readFoldingWs(InStream in)
   {
     Bool afterCr // cariage Return
     result := in.readStrToken(null) |char|
@@ -125,15 +127,15 @@ class MsgParser
       in.unreadChar('\r')
     }
       
-    return result ?: ""
+    return MailNode.makeLeaf(MailNodes.FWS, result ?: "")
   }
   
   ** %d33-39 / %d42-91 / %d93-126 /obs-ctext
   ** Not dealing with the obs-ctext for now (obsolete))
-  Str readCtext(InStream in)
+  MailNode readCtext(InStream in)
   {
     //TODO: obs-ctext
-    return in.readStrToken(null) |char|
+    return MailNode.makeLeaf(MailNodes.CTEXT, in.readStrToken(null) |char|
     {
       if ((char >= '\u0021' && char <= '\u0027') ||
             (char >= '\u002A' && char <= '\u005B')||
@@ -142,11 +144,11 @@ class MsgParser
         return false
       }
       return true  
-    } ?: ""
+    } ?: "")
   }
 
   ** Quoted pair. Ex:   \t  
-  Str readQuotedPair(InStream in)
+  MailNode readQuotedPair(InStream in)
   {
     Bool afterQuote
     Bool done
@@ -172,60 +174,59 @@ class MsgParser
       result = result[0..-2]
       in.unreadChar('\\')
     }
-    return result ?: ""
+    return MailNode.makeLeaf(MailNodes.QUOTEDPAIR, result ?: "")
   }
     
   ** ctext / quoted-pair / comment
-  Str readCcontent(InStream in)
+  MailNode readCcontent(InStream in)
   {
-    Str found := readCtext(in)
-    if(! found.isEmpty) return found
+    MailNode found := readCtext(in)
+    if(! found.isEmpty) return MailNode(MailNodes.CCONTENT, [found])
       found = readQuotedPair(in)
-    if(! found.isEmpty) return found
+    if(! found.isEmpty) return MailNode(MailNodes.CCONTENT, [found])
       found = readComment(in)
-    if(! found.isEmpty) return found
-      return ""
+    if(! found.isEmpty) return MailNode(MailNodes.CCONTENT, [found])
+      return emptyNode
   }
   
   ** Read aText -> See isAtext()  
-  Str readAtext(InStream in)
+  MailNode readAtext(InStream in)
   {
-    return in.readStrToken(null) |char|
+    return MailNode.makeLeaf(MailNodes.ATEXT, in.readStrToken(null) |char|
     {
       return ! isAtext(char)
-    } ?: ""
+    } ?: "")
   }
   
   ** dot-atom        =   [CFWS] dot-atom-text [CFWS]
-  Str readDotAtom(InStream in)
+  MailNode readDotAtom(InStream in)
   {
-    buf := StrBuf()
-    found := false
-    buf.add(readCfws(in))
+    nodes := [,]
+    nodes.add(readCfws(in))
     cc := readDotAtomText(in)
     if(cc.isEmpty)
     {
-      unread(in, buf.toStr)
-      return ""
+      unreadNodes(in, nodes)
+      return emptyNode
     }
     else
     {
-      return buf.add(cc).add(readCfws(in)).toStr
+      return MailNode(MailNodes.DOTATOM, nodes.add(cc).add(readCfws(in)))
     }
   }
 
   ** dot-atom-text   =   1*atext *("." 1*atext)
-  Str readDotAtomText(InStream in)
+  MailNode readDotAtomText(InStream in)
   {
+    nodes := [,]
     cc := readAtext(in)
     if(cc.isEmpty)
     {
-      unread(in, cc)
-      return ""
+      return emptyNode
     }
     else
     {
-      buf := StrBuf().add(cc)
+      nodes.add(cc)
       while(true)
       {
         c := in.peekChar
@@ -240,7 +241,7 @@ class MsgParser
           }
           else
           {
-            buf.add(".").add(cc2)  
+            nodes.add(MailNode.makeLeaf(MailNodes.DOT, ".")).add(cc2)  
           }
         }
         else
@@ -248,60 +249,60 @@ class MsgParser
           break
         }
       }
-      return buf.toStr
+      return MailNode(MailNodes.DOTATOM, nodes)
     }    
   }    
   
   ** [CFWS] 1*atext [CFWS]
-  Str readAtom(InStream in)
+  MailNode readAtom(InStream in)
   {
-    buf := StrBuf()
+    nodes := [,]
     found := false
     while(true)
     {
-      buf.add(readCfws(in))
+      nodes.add(readCfws(in))
       cc := readAtext(in)
       if(cc.isEmpty)
         break
       //else
       found = true
-      buf.add(cc)
+      nodes.add(cc)
     }
 
     if(found)
-      buf.add(readCfws(in))
+      nodes.add(readCfws(in))
     else
-      unread(in, buf.toStr)
+      unreadNodes(in, nodes)
 
-    return found ? buf.toStr : ""  
+    return found ? MailNode(MailNodes.ATOM, nodes) : emptyNode  
   }    
                   
                                                         
   ** "(" *([FWS] ccontent) [FWS] ")"
-  Str readComment(InStream in)
+  MailNode readComment(InStream in)
   {
-    buf := StrBuf()
+    nodes := [,]
     if(in.peekChar != '(')
-      return ""
+      return emptyNode
       
-    buf.add("(")
+    nodes.add(MailNode.makeLeaf(MailNodes.PAR, "("))
     in.readChar
 
     found := false    
     while(true)
     {
-      buf.add(readFoldingWs(in))
+      nodes.add(readFoldingWs(in))
       cc := readCcontent(in)
       if(cc.isEmpty)
         break
       //else
       found = true
-      buf.add(cc)
+      nodes.add(cc)
     } 
     
     if(found)
     {
-      buf.add(readFoldingWs(in))
+      nodes.add(readFoldingWs(in))
       if(in.peekChar != ')')
       {
         found = false
@@ -309,137 +310,145 @@ class MsgParser
       else
       {
         in.readChar
-        buf.add(")")
+        nodes.add(MailNode.makeLeaf(MailNodes.PAR, ")"))
       }
     }
     
-    if(!found)
-      unread(in, buf.toStr)
+    if( ! found)
+      unreadNodes(in, nodes)
       
-    return found ? buf.toStr : ""  
+    return found ? MailNode(MailNodes.COMMENT, nodes) : emptyNode  
   }
       
   ** (1*([FWS] comment) [FWS]) / FWS
-  Str readCfws(InStream in)
+  MailNode readCfws(InStream in)
   {
     found := false
-    buf := StrBuf()
+    nodes := [,]
     while(true)
     {
-      buf.add(readFoldingWs(in))
+      nodes.add(readFoldingWs(in))
       cc := readComment(in)
       if(cc.isEmpty)
         break
       //else
       found = true
-      buf.add(cc)
+      nodes.add(cc)
     }
     
     if(found)
-      buf.add(readFoldingWs(in))
+      nodes.add(readFoldingWs(in))
     else
-      unread(in, buf.toStr)
+      unreadNodes(in, nodes)
     
     // or FWS          
-    return found ? buf.toStr : readFoldingWs(in) 
+    return MailNode(MailNodes.CFWS, found ? nodes : [readFoldingWs(in)])
   }
   
   ** word            =   atom / quoted-string
-  Str readWord(InStream in)
+  MailNode readWord(InStream in)
   {
     atom := readAtom(in)
-    return atom.isEmpty ? readQuotedString(in) : atom
+    return MailNode(MailNodes.WORD, atom.isEmpty ? [readQuotedString(in)] : [atom])
   }
   
   ** phrase          =   1*word / obs-phrase
   ** Not dealing with obs-phrase yet
-  Str readPhrase(InStream in)
+  MailNode readPhrase(InStream in)
   {
     // TODO: obs-phrase
-    return readWord(in)
+    return MailNode(MailNodes.PHRASE, [readWord(in)])
   } 
 
   **    quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
-  Str readQuotedString(InStream in)
+  MailNode readQuotedString(InStream in)
   {
-    buf := StrBuf().add(readCfws(in))
+    nodes := [readCfws(in)]
     c := in.peekChar
     if(c != '"')
     {
-      unread(in, buf.toStr)
-      return ""
+      unreadNodes(in, nodes)
+      return emptyNode
     }
     // else
     in.readChar
-    buf.add("\"")
+    nodes.add(MailNode.makeLeaf(MailNodes.QUOTE, "\""))
     while(true)
     {
       fws := readFoldingWs(in)
       cc := readQcontent(in)
       if(cc.isEmpty)
       {
-        unread(in, fws)
+        unread(in, fws.text)
         break 
       }
       else
       {
-        buf.add(fws).add(cc)  
+        nodes.add(fws).add(cc)  
       }
     }
     c = in.peekChar
     if(c != '"')
     {
-      unread(in, buf.toStr)
-      return ""
+      unreadNodes(in, nodes)
+      return emptyNode
     } 
     // else
     in.readChar
-    buf.add("\"")
-    buf.add(readCfws(in))
-    return buf.toStr
+    nodes.add(MailNode.makeLeaf(MailNodes.QUOTE, "\""))
+    nodes.add(readCfws(in))
+    return MailNode(MailNodes.QUOTEDSTRING, nodes)
   }  
 
   ** qcontent        =   qtext / quoted-pair
-  Str readQcontent(InStream in)
+  MailNode readQcontent(InStream in)
   {
     t := readQtext(in)
-    return t.isEmpty ? readQuotedPair(in) : t
+    return MailNode(MailNodes.QCONTENT, t.isEmpty ? [readQuotedPair(in)] : [t])
   }
   ** qtext           =   %d33 / %d35-91 /%d93-126 /obs-qtext
   ** Not dealing with obs-qtext for now
-  Str readQtext(InStream in)
+  MailNode readQtext(InStream in)
   {
     // TODO: obs-qtext
-    return in.readStrToken(null) |char|
+    return MailNode.makeLeaf(MailNodes.QTEXT, in.readStrToken(null) |char|
     {
       return ! isQtext(char)
-    } ?: ""    
+    } ?: "")    
   } 
     
   ** unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct
   ** Not dealing with obs-unstruct yet
-  Str readUnstructured(InStream in)
+  MailNode readUnstructured(InStream in)
   {
     // TODO: obs-unstruct
     found := false
-    buf := StrBuf()
+    nodes := [,]
     while(true)
     {
-      buf.add(readFoldingWs(in))
+      nodes.add(readFoldingWs(in))
       char := in.peekChar
       if( char==null || ! isVchar(char))
         break        
       //else
       found = true
-      buf.add(in.readChar.toChar)
+      nodes.add(MailNode.makeLeaf(MailNodes.VCHAR, in.readChar.toChar))
     }
     
     if(found)
-      buf.add(readWsp(in))
+      nodes.add(readWsp(in))
     else
-      unread(in, buf.toStr)
+      unreadNodes(in, nodes)
     
-    return found ? buf.toStr : "" 
+    return found ? MailNode(MailNodes.UNSTRUCTURED, nodes) : emptyNode 
+  }
+  
+  Void unreadNodes(InStream in, MailNode[] nodes)
+  {
+    nodes.eachr
+    {
+      unread(in, it.text)
+    }
   }
   
   Void unread(InStream in, Str str)

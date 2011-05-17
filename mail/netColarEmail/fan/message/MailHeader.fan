@@ -12,29 +12,17 @@ abstract const class MailHeader
   {
     this.name = name
     rawVal = val
-    // TODO: Parse the kind (enum?) like To etc... 
   }
 }
 
-
-
-
+** From header
 const class HeaderFrom : MailHeader
 {
+  const Mailbox[] boxes
   // mailbox-list CRLF
-  new make() : super("From:","")
+  new make(Str rawVal, Mailbox[] boxes) : super("From:", rawVal)
   {
-    
+    this.boxes = boxes
   }
 }
 
-** a maibox (a.k.a email address, possibly named)
-const class MailBox
-{
-  const Str mb
-  
-  new make(Str mb)
-  {
-    this.mb = mb
-  }
-}
