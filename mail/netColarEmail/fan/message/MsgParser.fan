@@ -18,15 +18,51 @@ class MsgParser
   MailNode readMessage(InStream in)
   {
     headers := HeadersParser(this).readHeaders(in)
-    email := readBody(in)
-    return MailNode(MailNodes.MSGROOT, [headers, email])
+    body := readBody(in)
+    return MailNode(MailNodes.MSGROOT, [headers, body])
   }
   
   ** Read the email body
+  ** body            =   (*(*998text CRLF) *998text) / obs-body
   MailNode readBody(InStream in)
   {
-    // TODO
-    return MailNode(MailNodes.BODY, [,])
+    // TODO obs-body
+    // TODO: MIME support
+    body := StrBuf()
+    
+    while(true)
+    {
+      line := in.readStrToken(null) |char|
+      {
+        return ! isBodyChar(char)
+      }
+    
+      if(line == null)
+        break
+      //else
+      body.add(line)
+      
+      if(in.peekChar == '\r')
+      {
+        in.readChar
+        if(in.peekChar == '\n')
+        {
+            in.readChar
+            body.add("\r\n")  
+        }
+        else
+        {
+          unread(in, "\r")
+          break
+        }
+      }
+      else
+      {
+        break
+      }
+    }
+    
+    return MailNode.makeLeaf(MailNodes.BODY, body.toStr)  
   }
   
   // #####################  RFC 5322 Grammar stuff  ############################
@@ -48,8 +84,8 @@ class MsgParser
   Bool isQtext(Int c)
   {
     return  (c=='!' || 
-            (c>='\u0023' && c<='\u005B')||
-            (c>='\u005D' && c<='\u007E'))
+        (c>='\u0023' && c<='\u005B')||
+        (c>='\u005D' && c<='\u007E'))
   }
   
   ** white space: space or tab
@@ -64,12 +100,18 @@ class MsgParser
     return (char >= '\u0021' && char <= '\u007E')
   }
   
+  ** text            =   %d1-9 / %d11 / %d12 / %d14-127
+  Bool isBodyChar(Int c)
+  {
+    return  c!='\u0000' && c!='\u000A' && c!='\u000D' && c<= '\u007E'
+  }
+  
   MailNode readWsp(InStream in)
   {
     return MailNode.makeLeaf(MailNodes.WSP, in.readStrToken(null) |char|
-    {
-      return ! isWsp(char)
-    } ?: "")
+      {
+        return ! isWsp(char)
+      } ?: "")
   }
 
   ** space or tab or \r\n
@@ -111,15 +153,15 @@ class MsgParser
   {
     //TODO: obs-ctext
     return MailNode.makeLeaf(MailNodes.CTEXT, in.readStrToken(null) |char|
-    {
-      if ((char >= '\u0021' && char <= '\u0027') ||
-            (char >= '\u002A' && char <= '\u005B')||
-          (char >= '\u005D' && char <= '\u007E'))      
       {
-        return false
-      }
-      return true  
-    } ?: "")
+        if ((char >= '\u0021' && char <= '\u0027') ||
+              (char >= '\u002A' && char <= '\u005B')||
+            (char >= '\u005D' && char <= '\u007E'))      
+        {
+          return false
+        }
+        return true  
+      } ?: "")
   }
 
   ** Quoted pair. Ex:   \t  
@@ -168,9 +210,9 @@ class MsgParser
   MailNode readAtext(InStream in)
   {
     return MailNode.makeLeaf(MailNodes.ATEXT, in.readStrToken(null) |char|
-    {
-      return ! isAtext(char)
-    } ?: "")
+      {
+        return ! isAtext(char)
+      } ?: "")
   }
   
   ** dot-atom        =   [CFWS] dot-atom-text [CFWS]
@@ -387,9 +429,9 @@ class MsgParser
   {
     // TODO: obs-qtext
     return MailNode.makeLeaf(MailNodes.QTEXT, in.readStrToken(null) |char|
-    {
-      return ! isQtext(char)
-    } ?: "")    
+      {
+        return ! isQtext(char)
+      } ?: "")    
   } 
     
   ** unstructured    =   (*([FWS] VCHAR) *WSP) / obs-unstruct

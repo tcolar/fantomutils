@@ -46,17 +46,23 @@ class HeadersParser
     if(col != null)
     {
       name := line[0 ..< col].trim
-      val := line.size >= col ? line[col+1 .. -1].trim : ""
-      
-      echo("$name -> $val")
+      val := line.size >= col ? line[col+1 .. -1] : ""
       
       nameNode := MailNode.makeLeaf(MailNodes.HEADERNAME, name)
+      
+      colNode := MailNode.makeLeaf(MailNodes.COLON, ":")
       
       if(name.equalsIgnoreCase("From"))
       {
         // from  =   "From:" mailbox-list CRLF
-        nds := [nameNode, readMailboxList(val.in)]
+        nds := [nameNode, colNode, readMailboxList(val.in)]
         return MailNode(MailNodes.HEADER, nds)
+      }
+      else
+      {
+        // other header
+        nds := [nameNode, colNode, parser.readUnstructured(val.in)]
+        return MailNode(MailNodes.HEADER, nds)        
       }
 
     }

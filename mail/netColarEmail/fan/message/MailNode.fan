@@ -123,5 +123,6 @@ enum class MailNodes
   DOT, // .
   COMMA, //,
   PAR, // ()
-  QUOTE // "
+  QUOTE, // "
+  COLON // :
 }
