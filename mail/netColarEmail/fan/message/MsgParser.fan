@@ -7,51 +7,26 @@
 using email
 
 **
-** MsgParser : Parse a Mail message (data) into a MailMsg object
+** MsgParser : Parse a Mail message (data) into a parse tree (to be used to build a MailMsg)
 ** See RFC 5322
 **
 class MsgParser
 {
-  internal const MailNode emptyNode := MailNode(MailNodes.EMPTY, [,])
+  internal const MailNode emptyNode := MailNode(MailNodes.EMPTY, [,])  
   
-  
-  ** read a whole message  
-  MailMessage readMessage(InStream in)
+  ** Read a whole message (root node)  
+  MailNode readMessage(InStream in)
   {
-    msg := MailMessage()
-    {
-        headers = HeadersParser(this).readHeaders(in)
-        email = readBody(in)
-    }
-    return msg
+    headers := HeadersParser(this).readHeaders(in)
+    email := readBody(in)
+    return MailNode(MailNodes.MSGROOT, [headers, email])
   }
   
-  ** Decode the email body
-  Email readBody(InStream in)
+  ** Read the email body
+  MailNode readBody(InStream in)
   {
-    email := Email()
     // TODO
-    return email
-  }
-  
-  ** Read a folded line as a single line
-  ** If the next line starts with whitespace (space or tab), it's a "folded" line
-  Str readUnfoldedLine(InStream in)
-  {
-    buf := StrBuf()
-    while(true)
-    {
-      line := in.readLine
-      if(line == null)
-        break
-     
-      buf.add(line)
-      
-      char := in.peekChar
-      if( ! (char==' ' || char=='\t'))
-        break
-    }
-    return buf.toStr 
+    return MailNode(MailNodes.BODY, [,])
   }
   
   // #####################  RFC 5322 Grammar stuff  ############################
@@ -455,4 +430,25 @@ class MsgParser
   {
     str.eachr |char| {in.unreadChar(char)}
   }
+  
+  ** Read a folded line as a single line
+  ** If the next line starts with whitespace (space or tab), it's a "folded" line
+  Str readUnfoldedLine(InStream in)
+  {
+    buf := StrBuf()
+    while(true)
+    {
+      line := in.readLine
+      if(line == null)
+        break
+     
+      buf.add(line)
+      
+      char := in.peekChar
+      if( ! (char==' ' || char=='\t'))
+        break
+    }
+    return buf.toStr 
+  }
+  
 }

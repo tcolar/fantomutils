@@ -4,7 +4,8 @@
 
 **
 ** HeadersParser
-** Decode the Mail headers (RFC 5322)
+** Parse the Mail headers (RFC 5322)
+** Used by MsgParser
 **
 class HeadersParser
 {
@@ -18,40 +19,53 @@ class HeadersParser
   
   ** Read all the headers (Until a blank line)
   ** Does consume the empty line at the end of the headers  -> Ready to start reading the body
-  MailHeader[] readHeaders(InStream in)
+  MailNode readHeaders(InStream in)
   {
-    MailHeader[] headers := [,]
-    MailHeader? header
-    while( (header = readHeader(in)) != null)
+    MailNode[] headers := [,]
+    while(true)
     {
+      header := readHeader(in)
+      if(header.isEmpty)
+        break
+      //else
       headers.add(header)
     }
-    return headers
+    return MailNode(MailNodes.HEADERS, headers)
   }
   
   ** Read a single header
-  ** Return null, if all headers already read (empty line)
-  ** Does consume the empty line -> Ready to start reading the body
-  MailHeader? readHeader(InStream in)
+  ** Return an empty node if all headers already read (empty line)
+  ** Note: Does consume the empty line -> Ready to start reading the body
+  MailNode readHeader(InStream in)
   {
     line := parser.readUnfoldedLine(in)
     if(line.isEmpty)
-      return null
+      return parser.emptyNode
       
     col := line.index(":")
     if(col != null)
     {
       name := line[0 ..< col].trim
       val := line.size >= col ? line[col+1 .. -1].trim : ""
+      
       echo("$name -> $val")
-      return makeHeader(name.trim, val)
+      
+      nameNode := MailNode.makeLeaf(MailNodes.HEADERNAME, name)
+      
+      if(name.equalsIgnoreCase("From"))
+      {
+        // from  =   "From:" mailbox-list CRLF
+        nds := [nameNode, readMailboxList(val.in)]
+        return MailNode(MailNodes.HEADER, nds)
+      }
+
     }
     //else
     echo("Invalid header : $line")
-    return null
+    return parser.emptyNode
   }
  
-    /*
+  /*
   trace           =   [return]
   1*received
 
@@ -73,23 +87,23 @@ class HeadersParser
   
   resent-date     =   "Resent-Date:" date-time CRLF
 
-   resent-from     =   "Resent-From:" mailbox-list CRLF
+  resent-from     =   "Resent-From:" mailbox-list CRLF
 
-   resent-sender   =   "Resent-Sender:" mailbox CRLF
+  resent-sender   =   "Resent-Sender:" mailbox CRLF
 
-   resent-to       =   "Resent-To:" address-list CRLF
+  resent-to       =   "Resent-To:" address-list CRLF
 
-   resent-cc       =   "Resent-Cc:" address-list CRLF
+  resent-cc       =   "Resent-Cc:" address-list CRLF
 
-   resent-bcc      =   "Resent-Bcc:" [address-list / CFWS] CRLF
+  resent-bcc      =   "Resent-Bcc:" [address-list / CFWS] CRLF
 
-   resent-msg-id   =   "Resent-Message-ID:" msg-id CRLF
+  resent-msg-id   =   "Resent-Message-ID:" msg-id CRLF
   
   Fields may appear in messages that are otherwise unspecified in this
-   document.  They MUST conform to the syntax of an optional-field.
-   This is a field name, made up of the printable US-ASCII characters
-   except SP and colon, followed by a colon, followed by any text that
-   conforms to the unstructured syntax. 
+  document.  They MUST conform to the syntax of an optional-field.
+  This is a field name, made up of the printable US-ASCII characters
+  except SP and colon, followed by a colon, followed by any text that
+  conforms to the unstructured syntax. 
   */
 
   
@@ -105,31 +119,14 @@ class HeadersParser
   ** keywords        =   "Keywords:" phrase *("," phrase) CRLF
   ** 
   ** // TODO: Message ID - section 3.6.4
-  MailHeader? makeHeader(Str name, Str val) 
-  { 
-    if(name.equalsIgnoreCase("From"))
-    {
-      return readFrom(val)
-    }
-
-    echo("Unknown header: $name")
-    return null
-  }
-  
-  ** from  =   "From:" mailbox-list CRLF
-  HeaderFrom readFrom(Str rawVal)
-  {    
-    return HeaderFrom(rawVal, readMailboxList(rawVal.in))
-  }
-  
   ** (mailbox *("," mailbox)) / obs-mbox-list
-  Mailbox[] readMailboxList(InStream in)
+  MailNode readMailboxList(InStream in)
   {
     // TODO: obs-mbox-list
     mb := readMailbox(in)
-    if(mb == null)
+    if(mb.isEmpty)
     {
-      return [,]
+      return parser.emptyNode
     }
     // else
     boxes := [mb]
@@ -140,7 +137,7 @@ class HeadersParser
       // else
       in.readChar
       mb = readMailbox(in)
-      if(mb == null)
+      if(mb.isEmpty)
       {
         parser.unread(in, ",")
         break;
@@ -148,19 +145,19 @@ class HeadersParser
       // else
       boxes.add(mb)      
     }
-    return boxes
+    return MailNode(MailNodes.MAILBOXLIST, boxes)
   }
 
   ** mailbox = name-addr / addr-spec
-  Mailbox? readMailbox(InStream in)
+  MailNode readMailbox(InStream in)
   {
     found := readNameAddr(in)
     if( ! found.isEmpty )
-      return Mailbox(found.text)
+      return MailNode(MailNodes.MAILBOX, [found])
     found = readAddrSpec(in)
     if( ! found.isEmpty )
-      return Mailbox(found.text)
-    return null
+      return MailNode(MailNodes.MAILBOX, [found])
+    return parser.emptyNode
   }
   
   ** name-addr       =   [display-name] angle-addr
@@ -302,9 +299,9 @@ class HeadersParser
   MailNode readDtext(InStream in)
   {
     return MailNode.makeLeaf(MailNodes.DTEXT, in.readStrToken(null) |char|
-    {
-      return ! isDtext(char)
-    } ?: "")
+      {
+        return ! isDtext(char)
+      } ?: "")
   }
 
   

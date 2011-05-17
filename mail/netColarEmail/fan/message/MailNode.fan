@@ -60,10 +60,33 @@ const class MailNode
   }    
 }
 
+** Parse tree utilities
+class MailNodeUtils
+{
+  ** Recursively print a node tree
+  static Void print(MailNode node, Str indent := "")
+  {
+    echo("${indent}-ND: $node.kind -> $node.text")
+    indent += " "
+    node.children.each |nd| 
+    {
+      print(nd, indent)
+    }
+  }
+}
+
 ** enum of Mail node types
 enum class MailNodes
 {
   EMPTY, // Special Value for when the match failed.
+  
+  MSGROOT,
+  BODY,
+  HEADERS,
+  HEADER,
+  HEADERNAME,
+  MAILBOX,
+  MAILBOXLIST,
   
   COMMENT, 
   FWS, // folding white space  
