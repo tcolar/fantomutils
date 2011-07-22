@@ -13,9 +13,15 @@ class FullMsgParserTest : Test
   Void testMessages()
   {
     parser := MsgParser()
-    parser.readMessage(msgTrace.in)
     MailNode root := parser.readMessage(msg.in)
-    
+    MailNodeUtils.print(root)
+    root = parser.readMessage(msgReply.in)
+    MailNodeUtils.print(root)
+    root = parser.readMessage(msgFwd.in)
+    MailNodeUtils.print(root)
+    root = parser.readMessage(msgTrace.in)
+    MailNodeUtils.print(root)
+    root = parser.readMessage(msgComments.in)
     MailNodeUtils.print(root)
   }
   

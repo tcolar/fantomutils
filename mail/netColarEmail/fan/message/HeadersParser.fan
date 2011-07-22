@@ -52,77 +52,171 @@ class HeadersParser
       
       colNode := MailNode.makeLeaf(MailNodes.COLON, ":")
       
-      if(name.equalsIgnoreCase("From"))
+      MailNode? valNode 
+      try
       {
-        // from  =   "From:" mailbox-list CRLF
-        nds := [nameNode, colNode, readMailboxList(val.in)]
-        return MailNode(MailNodes.HEADER, nds)
-      }
-      else
+        switch(name.lower)
+        {
+          //TODO: parse trace
+          
+          case "date":
+          case "resent-date":
+            valNode = readDateTime(val.in)
+          case "from":
+          case "resent-from":
+            valNode = readMailboxList(val.in)
+          case "sender":
+          case "resent-sender":
+            valNode = readMailbox(val.in)
+          case "reply-to":
+          case "to":
+          case "cc":  
+          case"resent-to":
+          case"resent-cc":      
+            valNode = readAddressList(val.in)
+          case "bcc":
+          case "resent-bcc":
+            valNode = readBcc(val.in)
+          case "message-id":
+        case "resent-message-id":
+            valNode = readMsgId(val.in)
+          case "in-reply-to":
+          case "references":
+            valNode = readMsgIds(val.in)
+          case "subject":
+          case "comments":
+            valNode = parser.readUnstructured(val.in)
+          case "keywords":
+            valNode = readKeywords(val.in)
+          default:
+            // other "optional" header
+            valNode = parser.readUnstructured(val.in)
+        }
+      }catch(Err e) 
       {
-        // other header
-        nds := [nameNode, colNode, parser.readUnstructured(val.in)]
-        return MailNode(MailNodes.HEADER, nds)        
+        echo("Invalid header : $line")
+        e.trace
+        return parser.emptyNode
       }
-
+      
+      nds := [nameNode, colNode, valNode]
+      return MailNode(MailNodes.HEADER, nds)
     }
     //else
     echo("Invalid header : $line")
     return parser.emptyNode
   }
  
-  /*
-  trace           =   [return]
-  1*received
+  MailNode readDateTime(InStream in)
+  {
+    // TODO: OBS-YEAR
+    
+    // Drop CFWS
+    buf := StrBuf()
+    while(true)
+    {
+      
+      parser.readCfws(in)
+      c := in.readChar
+      if(c == null) 
+        break 
+      else     
+        buf.add(c.toChar)  
+    }  
+    date := buf.toStr.split('\n').join("")
+    echo(date)
+    // parse according to RFC 5322
+    // Full
+    dt := DateTime.fromLocale(date, "WWW,DMMMYYYYhh:mm:ssz", TimeZone.cur, false)
+    if(dt == null)
+      // No seconds
+    dt = DateTime.fromLocale(date, "WWW,DMMMYYYYhh:mmz", TimeZone.cur, false)
+    if(dt == null)
+      // No day of week
+    DateTime.fromLocale(date, "DMMMYYYYhh:mm:ssz", TimeZone.cur, false)
+    if(dt == null)    
+      // Neither
+    DateTime.fromLocale(date, "DMMMYYYYhh:mmz", TimeZone.cur, false)
+    echo("dt: $dt")
+    if(dt == null)
+      return parser.emptyNode
+    else
+      return DateTimeMailNode(buf.toStr, dt)   
+  }
 
-  return          =   "Return-Path:" path CRLF
-
-  path            =   angle-addr / ([CFWS] "<" [CFWS] ">" [CFWS])
-
-  received        =   "Received:" *received-token ";" date-time CRLF
-
-  received-token  =   word / angle-addr / addr-spec / domain
+  **  address-list    =   (address *("," address)) / obs-addr-list
+  MailNode readAddressList(InStream in)
+  {
+    // TODO: obs-mbox-list
+    address := readAddress(in)
+    if(address.isEmpty)
+    {
+      return parser.emptyNode
+    }
+    // else
+    addresses := [address]
+    while(true)
+    {
+      if(in.peekChar != ',')
+        break
+      // else
+      in.readChar
+      address = readAddress(in)
+      if(address.isEmpty)
+      {
+        parser.unread(in, ",")
+        break;
+      }
+      // else
+      addresses.add(address)      
+    }
+    return MailNode(MailNodes.ADDRESSLIST, addresses)
+    
+  }
+    
+  **   address         =   mailbox / group
+  MailNode readAddress(InStream in)
+  {
+    node := readMailbox(in)
+    if(!node.isEmpty)
+      return MailNode(MailNodes.ADDRESS, [node])
+    node = readGroup(in)
+    if(!node.isEmpty)
+      return MailNode(MailNodes.ADDRESS, [node])
+    return parser.emptyNode
+  }
   
-  address         =   mailbox / group
-
-  group           =   display-name ":" [group-list] ";" [CFWS]
-
-  address-list    =   (address *("," address)) / obs-addr-list
-
-  group-list      =   mailbox-list / CFWS / obs-group-list
+  ** group           =   display-name ":" [group-list] ";" [CFWS]
+  MailNode readGroup(InStream in)
+  {
+    nodes := [,]
+    node := readDisplayName(in)
+    nodes.add(node)
+    if(node.isEmpty)
+      return parser.emptyNode
+    if(in.peekChar != ':')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    in.readChar
+    nodes.add(MailNode.makeLeaf(MailNodes.COLON, ":"))
+    groups := readGroupList(in)
+    if(in.peekChar != ';')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    return MailNode(MailNodes.GROUP, nodes)    
+  }
   
-  resent-date     =   "Resent-Date:" date-time CRLF
+  **   group-list      =   mailbox-list / CFWS / obs-group-list
+  MailNode readGroupList(InStream in)
+  {
+    // TODO: obs-group-list
+    return readMailboxList(in)
+  }
 
-  resent-from     =   "Resent-From:" mailbox-list CRLF
-
-  resent-sender   =   "Resent-Sender:" mailbox CRLF
-
-  resent-to       =   "Resent-To:" address-list CRLF
-
-  resent-cc       =   "Resent-Cc:" address-list CRLF
-
-  resent-bcc      =   "Resent-Bcc:" [address-list / CFWS] CRLF
-
-  resent-msg-id   =   "Resent-Message-ID:" msg-id CRLF
-  
-  Fields may appear in messages that are otherwise unspecified in this
-  document.  They MUST conform to the syntax of an optional-field.
-  This is a field name, made up of the printable US-ASCII characters
-  except SP and colon, followed by a colon, followed by any text that
-  conforms to the unstructured syntax. 
-  */
-
-  
-  ** orig-date       =   "Date:" date-time CRLF
-  ** from            =   "From:" mailbox-list CRLF
-  ** sender          =   "Sender:" mailbox CRLF
-  ** reply-to        =   "Reply-To:" address-list CRLF
-  ** to              =   "To:" address-list CRLF
-  ** cc              =   "Cc:" address-list CRLF
-  ** bcc             =   "Bcc:" [address-list / CFWS] CRLF
-  ** subject         =   "Subject:" unstructured CRLF
-  ** comments        =   "Comments:" unstructured CRLF
-  ** keywords        =   "Keywords:" phrase *("," phrase) CRLF
   ** 
   ** // TODO: Message ID - section 3.6.4
   ** (mailbox *("," mailbox)) / obs-mbox-list
@@ -165,6 +259,19 @@ class HeadersParser
       return MailNode(MailNodes.MAILBOX, [found])
     return parser.emptyNode
   }
+  
+  **bcc             =   "Bcc:" [address-list / CFWS] CRLF
+  MailNode readBcc(InStream in)
+  {
+    found := readAddressList(in)
+    if( ! found.isEmpty )
+      return MailNode(MailNodes.BCC, [found])
+    found = parser.readCfws(in)
+    if( ! found.isEmpty )
+      return MailNode(MailNodes.BCC, [found])
+    return parser.emptyNode
+  }
+   
   
   ** name-addr       =   [display-name] angle-addr
   MailNode readNameAddr(InStream in)
@@ -317,5 +424,155 @@ class HeadersParser
     return  (c >= '\u0021' && c <='\u005A') ||
       (c >= '\u005E' && c <='\u007E' )
   }    
+
+  ** One or more message id's
+  MailNode readMsgIds(InStream in)
+  {
+    MailNode[] nodes := [,]
+    while(true)
+    {
+      nd := readMsgId(in)
+      if(nd.isEmpty)
+        break
+      nodes.add(nd)
+    }
+    return MailNode(MailNodes.MSGIDS, nodes)
+  }
+    
+  **    msg-id          =   [CFWS] "<" id-left "@" id-right ">" [CFWS]
+  MailNode readMsgId(InStream in)
+  {
+    nodes := [parser.readCfws(in)]
+    if(in.peekChar != '<')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    nodes.add(MailNode.makeLeaf(MailNodes.ANGLE, "<"))
+    
+    nd := readIdLeft(in)
+    if(nd.isEmpty)
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode      
+    }
+    nodes.add(nd)
+    
+    if(in.peekChar != '@')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    nodes.add(MailNode.makeLeaf(MailNodes.AT, "@"))
+    
+    nd = readIdRight(in)
+    if(nd.isEmpty)
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode      
+    }
+    nodes.add(nd)
+
+    if(in.peekChar != '>')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    nodes.add(MailNode.makeLeaf(MailNodes.ANGLE, ">"))
+    
+    nodes.add(parser.readCfws(in))
+    return MailNode(MailNodes.MSGID, nodes)
+  }
+  
+  ** id-left         =   dot-atom-text / obs-id-left
+  MailNode readIdLeft(InStream in)
+  {
+    return parser.readDotAtomText(in)
+  }
+
+  ** id-right        =   dot-atom-text / no-fold-literal / obs-id-right  
+  MailNode readIdRight(InStream in)
+  {
+    nd := parser.readDotAtomText(in)
+    if( ! nd.isEmpty)
+    {
+      return MailNode(MailNodes.IDRIGHT, [nd])
+    }
+    nd = readNoFoldLiteral(in)
+    if( ! nd.isEmpty)
+    {
+      return MailNode(MailNodes.IDRIGHT, [nd])
+    }
+    return parser.emptyNode
+  }
+
+  ** "[" *dtext "]"
+  MailNode readNoFoldLiteral(InStream in)
+  {
+    if(in.peekChar != '[')
+      return parser.emptyNode
+    nodes := [MailNode.makeLeaf(MailNodes.BRACKET, "[")]
+    while(true)
+    {
+      nd := readDtext(in)
+      if(nd.isEmpty)
+        break
+      nodes.add(nd)
+    }
+    if(in.peekChar != ']')
+    {
+      parser.unreadNodes(in, nodes)
+      return parser.emptyNode
+    }
+    nodes.add(MailNode.makeLeaf(MailNodes.BRACKET, "]"))
+    return MailNode(MailNodes.NOFOLDLITERAL, nodes)
+  }
+  
+  ** keywords        =   "Keywords:" phrase *("," phrase) CRLF
+  MailNode readKeywords(InStream in)
+  {
+    nd := parser.readPhrase(in)
+    if(nd.isEmpty)
+    {
+      return parser.emptyNode 
+    }
+    nodes := [nd]
+    while(true)
+    {
+      if(in.peekChar == ',')
+      {
+        in.readChar
+        nodes.add(MailNode.makeLeaf(MailNodes.COMMA, ","))
+        
+        phrase := parser.readPhrase(in)
+        if(phrase.isEmpty)
+        {
+          parser.unreadNodes(in, nodes)
+          break
+        }
+        nodes.add(phrase)
+      }
+      else
+      {
+        break
+      }
+    }
+    return MailNode(MailNodes.KEYWORDS, nodes)
+  }
+  
+    /*
+  trace           =   [return]
+  1*received
+
+  return          =   "Return-Path:" path CRLF
+
+  path            =   angle-addr / ([CFWS] "<" [CFWS] ">" [CFWS])
+
+  received        =   "Received:" *received-token ";" date-time CRLF
+
+  received-token  =   word / angle-addr / addr-spec / domain
+  
+  */
+  
 
 }

@@ -1,4 +1,4 @@
-// Copyright : Teachscape
+    // Copyright : Teachscape
 //
 // History:
 //   May 14, 2011 thibaut Creation
@@ -56,6 +56,14 @@ class HeaderParserTest : Test
     verifyEq(p.readNameAddr(in).text, "John Doe\t<tom_jerry-mouse&acc@[123.234.012.123]> ")
     verifyEq(in.peekChar, '~')
     
+    in = 
+"Thu,
+         13
+           Feb
+             1989
+         23:32
+                  -0330 (Newfoundland Time)".in
+    verifyEq((p.readDateTime(in) as DateTimeMailNode)->val, DateTime.fromIso("1989-02-13T23:32:00-03:30"))
     /*in = "john@doe.com  , jerry-doe@blah.co.uk  , toto@[1.2.3.4], Dude(The) <el@duderino.com> ~".in 
     Mailbox[] boxes := p.readMailboxList(in)   
     verifyEq(in.peekChar, '~')

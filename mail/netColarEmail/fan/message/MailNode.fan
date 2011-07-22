@@ -60,6 +60,18 @@ const class MailNode
   }    
 }
 
+** secialized node for a datetime
+const class DateTimeMailNode : MailNode
+{
+  const DateTime val
+  
+  new make(Str text, DateTime dateTime) : super.makeLeaf(MailNodes.DATETIME, text)
+  {
+    val = dateTime
+  }
+  
+}
+
 ** Parse tree utilities
 class MailNodeUtils
 {
@@ -87,6 +99,16 @@ enum class MailNodes
   HEADERNAME,
   MAILBOX,
   MAILBOXLIST,
+  ADDRESS,
+  GROUP,
+  ADDRESSLIST,
+  BCC,
+  MSGID,
+  IDRIGHT,
+  IDLEFT,
+  NOFOLDLITERAL,
+  KEYWORDS,
+  MSGIDS,
   
   COMMENT, 
   FWS, // folding white space  
@@ -115,6 +137,7 @@ enum class MailNodes
   DISPLAYNAME,
   ANGLEADDR,
   NAMEADDR,
+  DATETIME,
   
   // Leafs
   AT, // @
