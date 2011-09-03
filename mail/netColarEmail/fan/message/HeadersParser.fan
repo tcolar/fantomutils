@@ -30,7 +30,7 @@ class HeadersParser
       //else
       headers.add(header)
     }
-    return MailNode(MailNodes.HEADERS, headers)
+    return MailNode(MailNodes.T_HEADERS, headers)
   }
   
   ** Read a single header
@@ -48,7 +48,7 @@ class HeadersParser
       name := line[0 ..< col].trim
       val := line.size >= col ? line[col+1 .. -1] : ""
       
-      nameNode := MailNode.makeLeaf(MailNodes.HEADERNAME, name)
+      nameNode := MailNode.makeLeaf(MailNodes.T_HEADERNAME, name)
       
       colNode := MailNode.makeLeaf(MailNodes.COLON, ":")
       
@@ -100,7 +100,7 @@ class HeadersParser
       }
       
       nds := [nameNode, colNode, valNode]
-      return MailNode(MailNodes.HEADER, nds)
+      return MailNode(MailNodes.T_HEADER, nds)
     }
     //else
     echo("Invalid header : $line")
@@ -170,7 +170,7 @@ class HeadersParser
       // else
       addresses.add(address)      
     }
-    return MailNode(MailNodes.ADDRESSLIST, addresses)
+    return MailNode(MailNodes.T_ADDRESSLIST, addresses)
     
   }
     
@@ -179,10 +179,10 @@ class HeadersParser
   {
     node := readMailbox(in)
     if(!node.isEmpty)
-      return MailNode(MailNodes.ADDRESS, [node])
+      return MailNode(MailNodes.T_ADDRESS, [node])
     node = readGroup(in)
     if(!node.isEmpty)
-      return MailNode(MailNodes.ADDRESS, [node])
+      return MailNode(MailNodes.T_ADDRESS, [node])
     return parser.emptyNode
   }
   
@@ -207,7 +207,7 @@ class HeadersParser
       parser.unreadNodes(in, nodes)
       return parser.emptyNode
     }
-    return MailNode(MailNodes.GROUP, nodes)    
+    return MailNode(MailNodes.T_GROUP, nodes)    
   }
   
   **   group-list      =   mailbox-list / CFWS / obs-group-list
@@ -245,7 +245,7 @@ class HeadersParser
       // else
       boxes.add(mb)      
     }
-    return MailNode(MailNodes.MAILBOXLIST, boxes)
+    return MailNode(MailNodes.T_MAILBOXLIST, boxes)
   }
 
   ** mailbox = name-addr / addr-spec
@@ -253,10 +253,10 @@ class HeadersParser
   {
     found := readNameAddr(in)
     if( ! found.isEmpty )
-      return MailNode(MailNodes.MAILBOX, [found])
+      return MailNode(MailNodes.T_MAILBOX, [found])
     found = readAddrSpec(in)
     if( ! found.isEmpty )
-      return MailNode(MailNodes.MAILBOX, [found])
+      return MailNode(MailNodes.T_MAILBOX, [found])
     return parser.emptyNode
   }
   
@@ -265,10 +265,10 @@ class HeadersParser
   {
     found := readAddressList(in)
     if( ! found.isEmpty )
-      return MailNode(MailNodes.BCC, [found])
+      return MailNode(MailNodes.T_BCC, [found])
     found = parser.readCfws(in)
     if( ! found.isEmpty )
-      return MailNode(MailNodes.BCC, [found])
+      return MailNode(MailNodes.T_BCC, [found])
     return parser.emptyNode
   }
    
@@ -283,7 +283,7 @@ class HeadersParser
       parser.unread(in, dn.text)
       return parser.emptyNode
     }
-    return MailNode(MailNodes.NAMEADDR, [dn, aa])
+    return MailNode(MailNodes.T_NAMEADDR, [dn, aa])
   }
     
   ** [CFWS] "<" addr-spec ">" [CFWS] / obs-angle-addr
@@ -318,13 +318,13 @@ class HeadersParser
     nodes.add(MailNode.makeLeaf(MailNodes.ANGLE, ">"))
     nodes.add(parser.readCfws(in))
     
-    return MailNode(MailNodes.ANGLEADDR , nodes)
+    return MailNode(MailNodes.T_ANGLEADDR , nodes)
   }
   
   ** display-name    =   phrase
   MailNode readDisplayName(InStream in)
   {
-    return MailNode(MailNodes.DISPLAYNAME, [parser.readPhrase(in)])
+    return MailNode(MailNodes.T_DISPLAYNAME, [parser.readPhrase(in)])
   }
     
   ** addr-spec       =   local-part "@" domain
@@ -352,7 +352,7 @@ class HeadersParser
     // else
     nodes.add(found)
     
-    return MailNode(MailNodes.ADDRSPEC, nodes)
+    return MailNode(MailNodes.T_ADDRSPEC, nodes)
   }
       
   ** local-part      =   dot-atom / quoted-string / obs-local-part
@@ -436,7 +436,7 @@ class HeadersParser
         break
       nodes.add(nd)
     }
-    return MailNode(MailNodes.MSGIDS, nodes)
+    return MailNode(MailNodes.T_MSGIDS, nodes)
   }
     
   **    msg-id          =   [CFWS] "<" id-left "@" id-right ">" [CFWS]
@@ -481,7 +481,7 @@ class HeadersParser
     nodes.add(MailNode.makeLeaf(MailNodes.ANGLE, ">"))
     
     nodes.add(parser.readCfws(in))
-    return MailNode(MailNodes.MSGID, nodes)
+    return MailNode(MailNodes.T_MSGID, nodes)
   }
   
   ** id-left         =   dot-atom-text / obs-id-left
@@ -557,7 +557,7 @@ class HeadersParser
         break
       }
     }
-    return MailNode(MailNodes.KEYWORDS, nodes)
+    return MailNode(MailNodes.T_KEYWORDS, nodes)
   }
   
     /*

@@ -19,7 +19,7 @@ class MsgParser
   {
     headers := HeadersParser(this).readHeaders(in)
     body := readBody(in)
-    return MailNode(MailNodes.MSGROOT, [headers, body])
+    return MailNode(MailNodes.T_MSGROOT, [headers, body])
   }
   
   ** Read the email body
@@ -62,7 +62,7 @@ class MsgParser
       }
     }
     
-    return MailNode.makeLeaf(MailNodes.BODY, body.toStr)  
+    return MailNode.makeLeaf(MailNodes.T_BODY, body.toStr)  
   }
   
   // #####################  RFC 5322 Grammar stuff  ############################
@@ -144,7 +144,7 @@ class MsgParser
       in.unreadChar('\r')
     }
       
-    return MailNode.makeLeaf(MailNodes.FWS, result ?: "")
+    return MailNode.makeLeaf(MailNodes.R_FWS, result ?: "")
   }
   
   ** %d33-39 / %d42-91 / %d93-126 /obs-ctext
@@ -334,7 +334,7 @@ class MsgParser
     if( ! found)
       unreadNodes(in, nodes)
       
-    return found ? MailNode(MailNodes.COMMENT, nodes) : emptyNode  
+    return found ? MailNode(MailNodes.R_COMMENT, nodes) : emptyNode  
   }
       
   ** (1*([FWS] comment) [FWS]) / FWS
@@ -359,7 +359,7 @@ class MsgParser
       unreadNodes(in, nodes)
     
     // or FWS          
-    return MailNode(MailNodes.CFWS, found ? nodes : [readFoldingWs(in)])
+    return MailNode(MailNodes.R_CFWS, found ? nodes : [readFoldingWs(in)])
   }
   
   ** word            =   atom / quoted-string
@@ -457,7 +457,7 @@ class MsgParser
     else
       unreadNodes(in, nodes)
     
-    return found ? MailNode(MailNodes.UNSTRUCTURED, nodes) : emptyNode 
+    return found ? MailNode(MailNodes.T_UNSTRUCTURED, nodes) : emptyNode 
   }
   
   Void unreadNodes(InStream in, MailNode[] nodes)

@@ -6,12 +6,13 @@
 abstract const class MailHeader
 {
   const Str name
-  const Str rawVal
+  //const Str rawText
+  const Str text
   
-  new make(Str name, Str val)
+  new make(Str name, MailNode node)
   {
     this.name = name
-    rawVal = val
+    this.text = node.text
   }
 }
 

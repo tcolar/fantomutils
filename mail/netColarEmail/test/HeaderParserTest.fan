@@ -5,8 +5,8 @@
 //
 
 **
-** HeadreParserTest
-** Test Hedaers arsing
+** HeaderParserTest
+** Test Headers parsing
 **
 class HeaderParserTest : Test
 {
