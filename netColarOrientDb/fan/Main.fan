@@ -10,7 +10,7 @@ class Main
   **
   ** Main method
   **
-  static Void main()
+  Void main()
   {
     // Created Test DB
     // vi /config/orientdb-server-config.xml 
@@ -19,37 +19,33 @@ class Main
     //   userPassword="admin" loaded-at-startup="true"/> 
     c := OrientClient(`http://localhost:2480`, "admin", "admin")
     c.connect("test")
-    echo(c.ceateClass(Client#))
+
+    c.registerEntityTypes(this.typeof.pod)
     
-    (1..10).each
-    {
-      Bill[] bills := [,]
-      (1..5).each
-      {
-        bills.add(Bill("item"+it, 100 + it))
-      }
-      client := Client("client"+it, bills)
-      echo(c.writeDocument(client))
-    }    
+    bill := Bill("item1", 100)
+    
+    client := Client("client6", bill)
+
+    c.writeDocumentObj(client)
     
     c.disconnect
   }
   
 }
 
-@Serializable
+@OrientDocument
 class Client
 {
   Str name
-  Bill[] bills
-  new make(Str name, Bill[] bills) 
+  Bill bill
+  new make(Str name, Bill bill) 
   {
     this.name = name
-    this.bills = bills
+    this.bill = bill
   }
 }
 
-@Serializable
+@OrientDocument
 class Bill
 {
   Str item

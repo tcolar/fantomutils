@@ -67,24 +67,17 @@ class OrientClient
     return JsonInStream(c.resIn).readJson
   }
 
-  Str ceateClass(Type type)
+  Str createClass(Type type)
   {
-    req := makeReq(server.plusName("class", true).plusName(database,true).plusName("donkey"), "POST")
-    json := 
-    """{"name":"client9"}"""
-    req.postStr(json)
+    req := makeReq(server.plusName("class", true).plusName(database,true).plusName(type.name), "POST")
+    req.postStr("")
     return req.resIn.readAllBuf.readAllStr    
   }
     
-  Str writeDocument(Obj obj)
+  Str writeDocument(Str jsonDoc)
   {
-    //log.info("Disconnecting from db: $database")
-    name := obj.typeof.name
-    json := JsonOutStream.writeJsonToStr(obj)
-    json = 
-    """{"@class":"donkey","name":"client9"}"""
     req := makeReq(server.plusName("document", true).plusName(database), "POST")
-    req.postStr(json)
+    req.postStr(jsonDoc)
     return req.resIn.readAllBuf.readAllStr
   }
     
@@ -105,7 +98,7 @@ class OrientClient
   {
     pod.types.each
     {
-      if(it.hasFacet(DocumentFields#))
+      if(it.hasFacet(OrientDocument#))
       {
         registerEntityType(it)
       }
@@ -115,19 +108,68 @@ class OrientClient
   
   ** Register a single entity type
   ** Type must be annotated with OrientDocument facet
-  ** Results are cahed to avoid doing reflection every time
+  ** Results are cached to avoid doing reflection every time
+  ** It will automatically create an OrientDb class for that type
   This registerEntityType(Type type)
   {
-    if( ! type.hasFacet(DocumentFields#))
+    if(database == null)
+    {
+      throw Err("Need to call connect() before registerEntity")
+    } 
+    if( ! type.hasFacet(OrientDocument#))
     {
       throw Err("Type $type does not have DocumentFields Facet.")
     }
     name := type.name
-    if(cachedEntities.hasKey(name))
+    if(cachedEntities.containsKey(name))
     {
       throw Err("Duplicated Entity name: $name !")      
     }
-    // TODO : id duplicate Type simpleName, balk !
+    cachedEntities[name] = DocumentFields(type)    
+    
+    log.info("Registering entity: $name")
+    
+    // TODO: check if it exists first ?
+    createClass(type)
     return this;
-  }  
+  }
+  
+  ** Write an OrientDocument object
+  ** This might make several requests if the object is composed (of sub OrientDocument objects)
+  This writeDocumentObj(Obj obj)
+  {
+    //"""{"@class":"donkey","name":"client9"}"""
+    json := jsonizeObj(obj)
+    
+    echo(json)
+    echo(writeDocument(json))
+    return this    
+  }
+  
+  Str jsonizeObj(Obj obj)
+  {
+    objName := obj.typeof.name
+    if(! cachedEntities.containsKey(objName))
+      throw Err("No Entity found with name '$objName', maybe you forgot to call registerEntity ?")   
+                         
+    buf := StrBuf().add("{\"@class\":\"$objName\", ")
+              
+    fields := cachedEntities[objName]
+    fields.fieldNames.each |Str name| 
+    {
+        field := obj.trap(name)
+        if (field.typeof.hasFacet(OrientDocument#))
+        {
+          buf.add("\"$name\":").add("\"#7.1\", ")//.add(jsonizeObj(field))  
+        } 
+        else
+        {
+          //buf.
+          buf.add("\"$name\":").add(JsonOutStream.writeJsonToStr(field)).add(", ")  
+        }       
+    }  
+    buf.add("}")
+    
+    return buf.toStr    
+  }
 }
