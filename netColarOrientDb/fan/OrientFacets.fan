@@ -4,10 +4,10 @@
 //
 
 ** Mark an Object that will be persisted as a document in OrientDb
-facet class OrientDocument{}
+facet class OrientDocument {}
 
 ** Mark a document field as to be used as the version
-facet class OrientVersion{}
+facet class OrientVersion{} //TODO: use
 
 ** Mark a document field as to be used as the ID
-facet class OrientId{}
+facet class OrientId{} //TODO: use

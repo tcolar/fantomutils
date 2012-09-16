@@ -1,6 +1,11 @@
 // History:
 //   Sep 2, 2011 thibaut Creation
 //
+// Created Test DB
+// vi /config/orientdb-server-config.xml 
+// Then added a new "storage" in the xml:
+//   <storage name="test" path="local:../datbases/test" userName="admin"
+//   userPassword="admin" loaded-at-startup="true"/> 
 
 **
 ** Main
@@ -12,19 +17,18 @@ class Main
   **
   Void main()
   {
-    // Created Test DB
-    // vi /config/orientdb-server-config.xml 
-    // Then added a new "storage" in the xml:
-    //   <storage name="test" path="local:../datbases/test" userName="admin"
-    //   userPassword="admin" loaded-at-startup="true"/> 
+    Log.get("netColarOrient").level = LogLevel.debug
+    
     c := OrientClient(`http://localhost:2480`, "admin", "admin")
     c.connect("test")
 
     c.registerEntityTypes(this.typeof.pod)
     
-    bill := Bill("item1", 100)
+    bills := [Bill("item1", 101), Bill("item2", 102)]
     
-    client := Client("client6", bill)
+    client := Client("client7", bills)
+
+    c.getClassRecords(Bill#, 5)
 
     c.writeDocumentObj(client)
     
@@ -37,11 +41,14 @@ class Main
 class Client
 {
   Str name
-  Bill bill
-  new make(Str name, Bill bill) 
+  Bill[] bills
+  Bill singleBill
+  
+  new make(Str name, Bill[] bills) 
   {
     this.name = name
-    this.bill = bill
+    this.bills = bills
+    this.singleBill = bills[0]
   }
 }
 
@@ -50,6 +57,7 @@ class Bill
 {
   Str item
   Int price
+  
   new make(Str item, Int price)
   {
     this.item = item

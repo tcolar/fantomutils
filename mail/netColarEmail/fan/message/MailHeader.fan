@@ -9,10 +9,10 @@ abstract const class MailHeader
   //const Str rawText
   const Str text
   
-  new make(Str name, MailNode node)
+  new make(Str name, Str text)
   {
     this.name = name
-    this.text = node.text
+    this.text = text
   }
 }
 
