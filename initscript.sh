@@ -2,17 +2,17 @@
 # Fantom server init script - Thibaut Colar.
 
 ### BEGIN INIT INFO
-# Provides:       myfantomserver
+# Provides:       mycoolserver
 # Required-Start: $network
 # Required-Stop:  
 # Default-Start:  2 3 4 5
 # Default-Stop:   0 1 6
-# Short-Description: myfantomserver
+# Short-Description: mycoolserver
 ### END INIT INFO
 
 USER="fantom" # User we wil run fantom as
 FANTOM_HOME="/home/fantom/fan"
-FAN_ARGS="myfantomserverpod"
+FAN_ARGS="mycoolserverpod"
 WORKDIR="/home/fantom"
 
 ###### Start script ########################################################
