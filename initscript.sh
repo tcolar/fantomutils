@@ -36,6 +36,7 @@ case "$1" in
             exit 1
         fi
         export FANTOM_HOME=$FANTOM_HOME
+        cd "$WORKDIR"
         /bin/su $USER -p -s /bin/sh -c "$FANTOM_HOME/bin/fan $FAN_ARGS" > "$WORKDIR/$NAME.log" 2>&1 &
         PID=$!
         echo $PID > "$WORKDIR/$NAME.pid"
