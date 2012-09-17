@@ -29,29 +29,29 @@ recursiveKill() { # Recursively kill a process and all subprocesses
 
 case "$1" in
       start)
-        echo "Starting $0 ..."
-        if [ -f "$WORKDIR/$0.pid" ] 
+        echo "Starting $NAME ..."
+        if [ -f "$WORKDIR/$NAME.pid" ] 
         then 
-            echo "Already running according to $WORKDIR/$0.pid"
+            echo "Already running according to $WORKDIR/$NAME.pid"
             exit 1
         fi
         export FANTOM_HOME=$FANTOM_HOME
-        /bin/su $USER -p -s /bin/sh -c "$FANTOM_HOME/bin/fan $FAN_ARGS" > "$WORKDIR/$0.log" 2>&1 &
+        /bin/su $USER -p -s /bin/sh -c "$FANTOM_HOME/bin/fan $FAN_ARGS" > "$WORKDIR/$NAME.log" 2>&1 &
         PID=$!
-        echo $PID > "$WORKDIR/$0.pid"
-        echo "Started with pid $PID - Logging to $WORKDIR/$0.log" && exit 0
+        echo $PID > "$WORKDIR/$NAME.pid"
+        echo "Started with pid $PID - Logging to $WORKDIR/$NAME.log" && exit 0
         ;;
       stop)
-        echo "Stopping $0 ..."
-        if [ ! -f "$WORKDIR/$0.pid" ]
+        echo "Stopping $NAME ..."
+        if [ ! -f "$WORKDIR/$NAME.pid" ]
         then
             echo "Already stopped!"
             exit 1
         fi
-        PID=`cat "$WORKDIR/$0.pid"`
+        PID=`cat "$WORKDIR/$NAME.pid"`
         recursiveKill $PID
-        rm -f "$WORKDIR/$0.pid"
-        echo "stopped $0" && exit 0
+        rm -f "$WORKDIR/$NAME.pid"
+        echo "stopped $NAME" && exit 0
         ;;
       restart)
         $0 stop
@@ -59,21 +59,21 @@ case "$1" in
         $0 start
         ;;
       status)
-        if [ -f "$WORKDIR/$0.pid" ] 
+        if [ -f "$WORKDIR/$NAME.pid" ] 
         then 
-            PID=`cat "$WORKDIR/$0.pid"`
+            PID=`cat "$WORKDIR/$NAME.pid"`
             if [ "$(/bin/ps --no-headers -p $PID)" ]
             then
-                echo "$0 is running (pid : $PID)" && exit 0
+                echo "$NAME is running (pid : $PID)" && exit 0
             else
-                echo "Pid $PID found in $WORKDIR/$0.pid, but not running." && exit 1
+                echo "Pid $PID found in $WORKDIR/$NAME.pid, but not running." && exit 1
             fi
         else
-            echo "$0 is NOT running" && exit 1
+            echo "$NAME is NOT running" && exit 1
         fi
     ;;
       *)
-      echo "Usage: /etc/init.d/$0 {start|stop|restart|status}" && exit 1
+      echo "Usage: /etc/init.d/$NAME {start|stop|restart|status}" && exit 1
       ;;
 esac
 
