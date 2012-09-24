@@ -14,6 +14,7 @@ USER="fantom" # User we wil run fantom as
 FANTOM_HOME="/home/fantom/fan"
 FAN_ARGS="mycoolserverpod"
 WORKDIR="/home/fantom"
+NAME="mycoolserver"
 
 ###### Start script ########################################################
 

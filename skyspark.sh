@@ -15,6 +15,7 @@ FANTOM_HOME="/skyspark/skyspark-1.0.40"
 FAN_ARGS=""
 WORKDIR="/skyspark/skyspark-1.0.40"
 CMD="/skyspark/skyspark-1.0.40/bin/skyspark"
+NAME="skyspark"
 
 ###### Start script ########################################################
 
