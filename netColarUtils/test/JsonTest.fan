@@ -15,6 +15,7 @@ class JsonTest : Test
     original := JsonTestObj {}
     JsonUtils.save(buf.out, original)
     text := buf.flip.readAllStr
+    //echo(text)
     buf.clear
     loaded := JsonUtils.load(text.in, JsonTestObj#) as JsonTestObj
     JsonUtils.save(buf.out, loaded)
@@ -38,6 +39,8 @@ class JsonTestObj
   Str[]? nullList
   
   JsonSub sub1 := JsonSub {}
+  
+  TestEnum en := TestEnum.f
   
   new make(|This| f) {f(this)}
 }
@@ -65,4 +68,9 @@ class JsonSub2
     }      
     override Str toStr() {return a.toStr}  
     static JsonSub2 fromStr(Str str) {return makeInt(str.toInt)}  
+}
+
+enum class TestEnum
+{
+  t, g, i , f
 }
