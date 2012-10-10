@@ -9,8 +9,8 @@ class JavaUtils
 {
   ** Fantom Map to Java Hashtable
   static Hashtable mapToHashtable(Map map)
-	{
-		return Hashtable(Interop.toJava(map))
+  {
+    return Hashtable(Interop.toJava(map))
   }
 }
 
@@ -38,7 +38,7 @@ class EnumWrapper
   Void each(|Obj->Void| f)
   {
     while(hasNext)
-		{
+    {
       f.call(next)
     }
   }

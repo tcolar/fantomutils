@@ -67,7 +67,7 @@ abstract class Settings
     getSettingFields.each |field| 
     {
       key := field.name
-      regex := Regex(Str<|^\W*|> + key + Str<|\W*=.*|>)
+      regex := Regex.fromStr(Str<|^\W*|> + key + Str<|\W*=.*|>)
       setting := field.facet(Setting#) as Setting
       index := lines.findIndex |line -> Bool| { return regex.matches(line) }
       if( index != null )
@@ -92,7 +92,7 @@ abstract class Settings
       out.sync
     }
     catch(Err e) {e.trace}
-    finally
+      finally
     {
       out.close
     }
