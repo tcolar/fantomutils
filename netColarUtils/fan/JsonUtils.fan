@@ -4,11 +4,12 @@
 //
 using util
 
-// TODO: Support consts by using with() costructors
-
 **
 ** JsonUtils
 ** Utilities to save/load objects in JSON format
+** 
+** Note: Non simple Serializable objects MUST provide an it constructor
+**   ie: new make(|This| f) {f(this)} 
 **
 class JsonUtils
 {
@@ -32,7 +33,6 @@ class JsonUtils
   
   ** Load the object to the instream
   ** Stream is guaranteed to be closed.
-  ** Target type needs to have a no parameters constructor
   static Obj? load(InStream in, Type type)
   {
     try
@@ -78,21 +78,20 @@ class JsonUtils
       }  
     }
     return obj
-    //throw Err("Don't know how to Deserialize $obj as $type")
   }
   
-  internal static Obj? deserializeMap(Obj obj, Type type)
+  internal static Obj deserializeMap(Obj obj, Type type)
   {
-    if(! obj.typeof.fits(Map#))
-    {
-      throw Err("Cannot deserialize $obj into non-map $type")
-    }  
-    
     map := (Map) obj
     
-    if(type.fits(Map#))
+    if( ! type.fits(Map#))
     {  
-      // actually a map
+      // A serializable that was serialized as a map object
+      return deserializeMapObj(map, type)  
+    }  
+    else
+    {
+      // An actual Map
       instance := Map.make(type)
       
       map.each |v, k|
@@ -100,34 +99,12 @@ class JsonUtils
         instance[deserialize(k, type.params["K"])] = deserialize(v, type.params["V"])            
       }
       return instance
-    }  
-    else
-    {  
-      // otherwise must have been a serializable
-      instance := type.make    
-    
-      map.each |v, k|
-      {
-        field := type.field(k, false)
-        if(field != null)
-        {
-          item := deserialize(v, field.type)
-          field.set(instance, item)
-        }      
-      }
-      return instance
     } 
-    return null  
   }
 
-  internal static Obj? deserializeList(Obj obj, Type type)
+  internal static Obj deserializeList(Obj obj, Type type)
   {
     list := (List) obj
-    
-    if(! type.fits(List#))
-    {
-      throw Err("Cannot deserialize $obj into non-list $type")
-    }  
     
     of := type.params["V"]
     instance := List.make(of, 10)   
@@ -139,4 +116,27 @@ class JsonUtils
     
     return instance
   }
+  
+  ** Deserialize a serializable object from it's Map Object representation
+  internal static Obj deserializeMapObj(Map mapObj, Type type)
+  {
+    [Field:Obj?] fieldMap := [:]
+    mapObj.each |v, k|
+    {
+      field := type.field(k, false)
+      if(field != null)
+      {
+        fieldMap[field]= deserialize(v, field.type)
+      }      
+    }
+    
+    try        
+    {
+      return type.make([Field.makeSetFunc(fieldMap)])
+    }    
+    catch(Err e)
+    {
+      throw Err("$type is missing an it constructor !", e)
+    }  
+  }  
 }

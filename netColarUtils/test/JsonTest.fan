@@ -12,7 +12,7 @@ class JsonTest : Test
   Void test()
   {
     buf := Buf()
-    original := JsonTestObj()
+    original := JsonTestObj {}
     JsonUtils.save(buf.out, original)
     text := buf.flip.readAllStr
     buf.clear
@@ -37,7 +37,9 @@ class JsonTestObj
   Str[] list := ["a","b","c"]
   Str[]? nullList
   
-  JsonSub sub1 := JsonSub()
+  JsonSub sub1 := JsonSub {}
+  
+  new make(|This| f) {f(this)}
 }
 
 @Serializable
@@ -47,7 +49,9 @@ class JsonSub
     Str:Int map2 := ["a":1, "b":2, "c":3]
     [Str:Obj]? nullMap  
       
-    JsonSub2 sub2 := JsonSub2(27)
+    JsonSub2 sub2 := JsonSub2.makeInt(27)
+    
+    new make(|This| f) {f(this)}  
 }
 
 @Serializable {simple = true}
@@ -55,10 +59,10 @@ class JsonSub2
 {
     Int a
     
-    new make(Int val)
+    new makeInt(Int val)
     {
       a = val  
     }      
     override Str toStr() {return a.toStr}  
-    static JsonSub2 fromStr(Str str) {return make(str.toInt)}  
+    static JsonSub2 fromStr(Str str) {return makeInt(str.toInt)}  
 }
