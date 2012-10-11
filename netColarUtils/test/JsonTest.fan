@@ -28,7 +28,7 @@ class JsonTest : Test
 class JsonTestObj
 {
   
-  Bool bool1 := false
+  const Bool bool1 := false
   Bool? nulBool
   
   @Transient Int ignore := 5

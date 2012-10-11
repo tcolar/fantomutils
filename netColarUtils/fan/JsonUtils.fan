@@ -126,7 +126,10 @@ class JsonUtils
       field := type.field(k, false)
       if(field != null)
       {
-        fieldMap[field]= deserialize(v, field.type)
+        obj := deserialize(v, field.type)
+        if(field.isConst)
+          obj = obj.toImmutable
+        fieldMap[field] = obj
       }      
     }
     
