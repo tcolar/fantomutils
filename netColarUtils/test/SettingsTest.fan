@@ -9,13 +9,26 @@ class SettingsTest : Test
 {
   Void testSettings()
   {
-    s := MySettings()
+    settings := SettingUtils
+    {
+      headComments =
+      [
+    "This is the setting file for Dummy Test 1.3",
+    "Feel free to change stuff !"
+      ]
+  
+      tailComments =
+      [
+    "------------ The End !! -------------------",
+      ]
+    }
+    
+    s := MySettings {}
     f := File(`/tmp/settings.txt`).deleteOnExit
-    s.save(f.out)
+    settings.save(s, f.out)
     
     // save & read
-    s2 := MySettings()
-    s2.read(f.in)
+    MySettings? s2 := settings.read(MySettings#, f.in) as MySettings
     
     validateSettings(s, s2)
     
@@ -24,8 +37,8 @@ class SettingsTest : Test
     s.host = "tesHost"
     s.notSaved = 0
     s.paths = ["test1", "test2"]
-    s.save(f.out)
-    s2.read(f.in)
+    settings.save(s, f.out)
+    s2 = settings.read(MySettings#, f.in) as MySettings
     
     validateSettings(s, s2)
     verifyEq(s.notSaved, 0)
@@ -44,8 +57,8 @@ class SettingsTest : Test
     s.host = "testHost2"
     s.notSaved = 1
     s.paths = ["test2", "test3"]
-    s.update(f)
-    s2.read(f.in)
+    settings.update(s, f)
+    s2 = settings.read(MySettings#, f.in)
     
     validateSettings(s, s2)
     verifyEq(s.notSaved, 1)
@@ -56,8 +69,8 @@ class SettingsTest : Test
     verifyEq(lines[-1], "# Custom comment 2")
     
     // check nullable exception
-    s3 := BrokenSettings()
-    verifyErr(Err#) { s3.update(f) }
+    s3 := BrokenSettings {}
+    verifyErr(Err#) { settings.update(s3, f) }
   }
   
   ** Validate s and s2 have the same values
@@ -72,18 +85,9 @@ class SettingsTest : Test
   
 }
 
-class MySettings : Settings
+class MySettings
 {
-  override Str[] headComments :=
-  [
-    "This is the setting file for Dummy Test 1.3",
-    "Feel free to change stuff !"
-  ]
-  
-  override Str[] tailComments :=
-  [
-    "------------ The End !! -------------------",
-  ]
+  new make(|This| f) {f(this)}
   
   @Setting
   Int port := 8080
@@ -95,13 +99,15 @@ class MySettings : Settings
   Str[] paths := ["path1", "path2"] 
   
   @Setting{help = ["It's complicated"] }
-  ComplexSetting complex := ComplexSetting()
+  ComplexSetting complex := ComplexSetting {}
   
   Int notSaved := 5  
 }
 
-class BrokenSettings : Settings
+class BrokenSettings
 {
+  new make(|This| f) {f(this)}
+  
   @Setting{help = ["Nullable"] }
   Int? Nullable
 }
@@ -109,6 +115,8 @@ class BrokenSettings : Settings
 @Serializable
 class ComplexSetting
 {
+  new make(|This| f) {f(this)}
+
   Str bar := "bar"
   Int foo := 5
   Str? someNullThing

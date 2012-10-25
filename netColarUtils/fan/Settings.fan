@@ -8,26 +8,31 @@
 ** Allows for Easy, documented settings files
 ** 
 ** All fields with the Facet "Setting" will be saved (using serialization: writeObj/ReadObj)
-** Fields with rge Setting Facet can NOT be nullable.
+** Fields with the Setting Facet can NOT be nullable.
 ** If there is a default value it will be displayed as well (as a comment in saved file)
 ** Note: It even works with "Complex" serialized obects, although it is less user friendly (better to stick to "simples")
 **
-abstract class Settings
+final class SettingUtils
 {
   ** Line comment char (default: #)
-  virtual Str commentChar := "#"
+  Str commentChar := "#"
 
   ** Comments to show at the top of the file
   ** commentChar  will be prepanded to each line
-  virtual Str[] headComments := [,]
+  Str[] headComments := [,]
 
   ** Comments to show at the bottom of the file
   ** commentChar will be prepanded to each line
-  virtual Str[] tailComments := [,]  
-    
-  ** Load the settings from a stream/file
-  Void read(InStream in)
+  Str[] tailComments := [,]  
+  
+  new make(|This| f) { f(this) } 
+  new makeDefault() {} 
+        
+  ** Load the settings from a stream/file nd inject the into a new object of given type
+  ** the type muts have an it constructor ! new make(|This| f) {f(this)} 
+  Obj? read(Type type, InStream in)
   {
+    [Field:Obj?] fieldMap := [:]
     in.eachLine |Str line| 
     {
       if( ! line.isEmpty && ! line.startsWith(commentChar))
@@ -41,30 +46,34 @@ abstract class Settings
           {
             val = line[idx + 1 .. -1].trim.in.readObj
           }  
-          field := Type.of(this).field(key, false)
+          field := type.field(key, false)
           if(field!=null)
-            field.set(this, val)  
+          {
+            if(field.isConst)
+              val = val.toImmutable  
+            fieldMap[field] = val  
+          }  
           else
             echo("Unknow field: ${key}. Ignoring it.")      
         }
       }
     }
+    return type.make([Field.makeSetFunc(fieldMap)])
   } 
 
-  ** Try to update the file "in place"
+  ** Try to save the file "in place"
   ** Not touching existing comment lines
   ** If the file does not exist then it just calls save()
-  ** 
-  Void update(File f)
+  Void update(Obj o, File f)
   {
     if( ! f.exists)
     {
-      save(f.out)
+      save(o, f.out)
       return
     }
     
     Str[] lines := f.readAllLines 
-    getSettingFields.each |field| 
+    getSettingFields(o).each |field| 
     {
       key := field.name
       regex := Regex.fromStr(Str<|^\W*|> + key + Str<|\W*=.*|>)
@@ -73,14 +82,14 @@ abstract class Settings
       if( index != null )
       {
         // replace just this line with the new value
-        val := serializeOneLine(field.get(this))
+        val := serializeOneLine(field.get(o))
         lines[index] = "$key = $val"
       }
       else
       {
         // Missing/New item -> adding at the end
         lines.add("")
-        lines.addAll(getFieldText(field))
+        lines.addAll(getFieldText(o, field))
       }
     }
     
@@ -100,7 +109,7 @@ abstract class Settings
     
   ** Save the settings (complete overwrite)
   ** Closes the stream when done
-  Void save(OutStream out)
+  Void save(Obj o, OutStream out)
   {
     now := DateTime.now
     try
@@ -110,9 +119,9 @@ abstract class Settings
         out.printLine("${commentChar}${commentChar} $str")
       }
       out.printLine
-      getSettingFields.each |field| 
+      getSettingFields(o).each |field| 
       {
-        getFieldText(field).each |line| 
+        getFieldText(o, field).each |line| 
         {
           out.printLine(line)
         }
@@ -135,7 +144,7 @@ abstract class Settings
   }
   
   ** Get the settings line for a field
-  private Str[] getFieldText(Field field)
+  private Str[] getFieldText(Obj o, Field field)
   {
     lines := Str[,]
     setting := field.facet(Setting#) as Setting
@@ -143,15 +152,10 @@ abstract class Settings
     {
       lines.add("$commentChar $str")
     }
-    defVal := field.get(this.typeof.make)
-    if( defVal != null )
-    {
-      lines.add("$commentChar Default value : " + serializeOneLine(defVal))        
-    }
-    val := field.get(this)
+    val := field.get(o)
     if(val != null)
     {
-      lines.add("$field.name = " + serializeOneLine(field.get(this)))
+      lines.add("$field.name = " + serializeOneLine(field.get(o)))
     }
     return lines
   }
@@ -164,9 +168,9 @@ abstract class Settings
   }
   
   ** Get all the fields with a Setting facet
-  private Field[] getSettingFields()
+  private Field[] getSettingFields(Obj o)
   {
-    fields := Type.of(this).fields.findAll |f| { f.hasFacet(Setting#) }
+    fields := Type.of(o).fields.findAll |f| { f.hasFacet(Setting#) }
     fields.each |field| 
     {
       if(field.type.isNullable)

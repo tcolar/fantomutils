@@ -16,5 +16,8 @@ class Build : BuildPod
   {
     podName     = "helloWorld"
   }
-
+  Void dodo()
+  {
+    bla
+  }
 }

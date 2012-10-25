@@ -16,4 +16,5 @@
 //@podJsDirs = [`js`]
 pod helloWorld
 {
+xxxx
 }
