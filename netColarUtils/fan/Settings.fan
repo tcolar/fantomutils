@@ -164,7 +164,16 @@ final class SettingUtils
   ** It might look a bit funny ... but it's useable
   private Str serializeOneLine(Obj obj)
   {
-    return Buf().writeObj(obj).flip.readAllLines.join(";")
+    Str result := ""
+    lines := Buf().writeObj(obj).flip.readAllLines
+    lines.each |line|
+    {
+      last := result.isEmpty ? null : result[-1]
+      if(! (last==null || line.startsWith("{") || line.startsWith("}") || last == '}' || last == '{' || last==';'))
+        result += ";"
+      result += line
+    }
+    return result
   }
   
   ** Get all the fields with a Setting facet
