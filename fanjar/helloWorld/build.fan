@@ -12,15 +12,4 @@ using build
 class Build : BuildPod
 {
 
-  override Void setup()
-  {
-    podName     = "helloWorld"
-    i := -0.237
-    b := 0xFF_AA_AA_AA_
-    dodo
-  }
-  Void dodo()
-  {
-    bla
-  }
 }
