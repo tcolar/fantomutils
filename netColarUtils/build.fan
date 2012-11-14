@@ -15,8 +15,8 @@ class Build : BuildPod
     podName = "netColarUtils"
     summary = "Various reusable famtom utils"
     depends = ["sys 1.0+", "util 1.0+"]
-    version = Version("0.0.2")
+    version = Version("1.0.0")
     srcDirs = [`fan/`, `test/`]
-    meta = ["license.name" : "MIT", "vcs.uri" : "https://bitbucket.org/tcolar/fantomutils/src/tip/netColarUtils"]  
+    meta = ["license.name" : "MIT", "vcs.uri" : "https://bitbucket.org/tcolar/fantomutils/src/tip/netColarUtils"]
   }
 }
