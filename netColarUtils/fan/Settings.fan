@@ -198,8 +198,8 @@ final class SettingUtils
     try
     {
       obj = settings.read(type, file.in)
-      // always save as to merge possible new settings
-      settings.save(obj, file.out)
+      // always update as to merge possible new settings
+      settings.update(obj, file)
     }
     catch (Err e)
       echo("ERROR: Cannot load $file\n $e")
