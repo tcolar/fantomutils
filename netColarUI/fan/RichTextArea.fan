@@ -13,30 +13,30 @@ using gfx
 **
 class RichTextArea : RichText
 {
-    new make(Str lblText, RichTextStyle? lblStyle := null) : super()
+  new make(Str lblText, RichTextStyle? lblStyle := null) : super()
+  {
+    myModel := BasicRichTextModel()
     {
-        myModel := BasicRichTextModel()
-        {
-          it.text = lblText
-          if(lblStyle!=null)
-            style = lblStyle
-        }
-        model = myModel
-		font = myModel.style.font
-        prefRows = myModel.lineCount
-        editable = false
-        hscroll = false
-        vscroll = false
-        border = false
+      it.text = lblText
+      if(lblStyle!=null)
+        style = lblStyle
     }
+    model = myModel
+    font = myModel.style.font
+    prefRows = myModel.lineCount
+    editable = false
+    hscroll = false
+    vscroll = false
+    border = false
+  }
 
-    override Size prefSize(Hints hints := Hints.defVal)
-    {
-        md := model as BasicRichTextModel
-        // TODO: unfortunately margins are hardcoded in RichTextPeer (top:0, others: 8)
-        w := md.longestLineWidth + 16
-        h := md.lineCount * md.style.font.height() + 8
-        return Size(w, h)
-    }
+  override Size prefSize(Hints hints := Hints.defVal)
+  {
+      md := model as BasicRichTextModel
+      // TODO: unfortunately margins are hardcoded in RichTextPeer (top:0, others: 8)
+      w := md.longestLineWidth + 16
+      h := md.lineCount * md.style.font.height() + 8
+      return Size(w, h)
+  }
 }
 

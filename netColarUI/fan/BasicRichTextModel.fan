@@ -44,7 +44,7 @@ class BasicRichTextModel : RichTextModel
   override Int offsetAtLine(Int lineIndex)
   {
     Int r := text.splitLines[0..<lineIndex]
-      .reduce(0) |Obj o, Str line->Int| { return line.size+o+1 }
+      .reduce(0) |Int o, Str line->Int| { return line.size + o + 1 }
     return r
   }
 
@@ -80,6 +80,6 @@ class BasicRichTextModel : RichTextModel
   ** Width in pixels of the longest line of this text
   Int longestLineWidth()
   {
-	  text.splitLines.reduce(0) |val, line| { style.font.width(line).max(val) }
+    text.splitLines.reduce(0) |val, line| { style.font.width(line).max(val) }
   }
 }

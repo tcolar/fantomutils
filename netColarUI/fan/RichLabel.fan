@@ -12,28 +12,28 @@ using gfx
 **
 class RichLabel : RichText
 {
-    new make(Str lblText, RichTextStyle? lblStyle := null) : super()
+  new make(Str lblText, RichTextStyle? lblStyle := null) : super()
+  {
+    prefRows = 1
+    editable = false
+    hscroll = false
+    vscroll = false
+    border = false
+    model = BasicRichTextModel()
     {
-        prefRows = 1
-        editable = false
-        hscroll = false
-        vscroll = false
-        border = false
-        model = BasicRichTextModel()
-        {
-          it.text = lblText
-          if(lblStyle!=null)
-            style = lblStyle
-        }
-        pack
+      it.text = lblText
+      if(lblStyle!=null)
+        style = lblStyle
     }
+    pack
+  }
 
-    override Size prefSize(Hints hints := Hints.defVal)
-    {
-        md := model as BasicRichTextModel
-        w := md.style.font.width(text) + 16
-        h := md.style.font.height() + 11
-        return Size(w, h)
-    }
+  override Size prefSize(Hints hints := Hints.defVal)
+  {
+    md := model as BasicRichTextModel
+    w := md.style.font.width(text) + 16
+    h := md.style.font.height() + 11
+    return Size(w, h)
+  }
 }
 
