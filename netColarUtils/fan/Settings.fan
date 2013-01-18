@@ -7,11 +7,13 @@
 ** Settings
 ** Allows for Easy, documented settings files
 **
+** Note: Usually prefer JsonUtils has it is a bit more flexible/sturdy than serialization.
+**
 ** All fields with the Facet "Setting" will be saved (using serialization: writeObj/ReadObj)
 ** Fields with the Setting Facet can NOT be nullable.
+** Fields are stored using fantom serialization
 ** If there is a default value it will be displayed as well (as a comment in saved file)
 ** Note: It even works with "Complex" serialized obects, although it is less user friendly (better to stick to "simples")
-**
 final class SettingUtils
 {
   ** Line comment char (default: #)
@@ -26,10 +28,10 @@ final class SettingUtils
   Str[] tailComments := [,]
 
   new make(|This| f) { f(this) }
-  new makeDefault() {}
+  //new makeDefault() {}
 
-  ** Load the settings from a stream/file nd inject the into a new object of given type
-  ** the type muts have an it constructor ! new make(|This| f) {f(this)}
+  ** Load the settings from a stream/file and inject the into a new object of given type
+  ** the type must have an it constructor ! new make(|This| f) {f(this)}
   Obj? read(Type type, InStream in)
   {
     [Field:Obj?] fieldMap := [:]
@@ -191,7 +193,7 @@ final class SettingUtils
  ** Load settings from a file into given type
   static Obj? load(File file, Type type, Bool createIfMissing := true)
   {
-    SettingUtils settings := SettingUtils()
+    SettingUtils settings := SettingUtils {}
     Obj? obj
     if(! file.exists)
       settings.save(type.make, file.out)
@@ -212,15 +214,3 @@ final class SettingUtils
 
 }
 
-** Facet for a specific setting
-** NOTE: Not allowed on Nullables
-facet class Setting
-{
-  ** Help/comments about this Setting (lines of text) will show as comments
-  const Str[] help := [,]
-
-  ** Can be used to categorize the settings when presenting them to the user in a settings UI
-  ** Default:Null (none)
-  ** Does NOT show in the saved settings file
-  const Str? category
-}

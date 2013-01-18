@@ -41,8 +41,11 @@ class FileUtils
     if(f.size > maxSize) return false
 
     // Check known common file types for fantom projects
-    if(knownTextExts.contains(f.ext)) return true
-    if(knownBinExts.contains(f.ext)) return false
+    if(f.ext != null)
+    {
+      if(knownTextExts.contains(f.ext)) return true
+      if(knownBinExts.contains(f.ext)) return false
+    }
 
     // Chek if a mime type is present and it think it's text
     if (f.mimeType != null && f.mimeType.mediaType == "text") return true
@@ -62,6 +65,11 @@ class FileUtils
        line.each |char| {if(char.isAlphaNum) count++}
        // if at least 90% alphanum then consider text file
        return (count==0 || count * 100 / line.size < 90) ? false : true
+    }
+    catch(Err e)
+    {
+      // if reading failed, then it's probably binary / invalid encoding
+      return false
     }
     finally
     {

@@ -1,30 +1,25 @@
 // History:
-//   Apr 29, 2011 thibaut Creation
+//  Jan 13 13 tcolar Creation
 //
 
 **
-** SettingsTest
+** JsonSettingsTest
 **
-class SettingsTest : Test
+class JsonSettingsTest : Test
 {
   Void testSettings()
   {
-    settings := SettingUtils
+    settings := JsonSettings
     {
       headComments =
       [
     "This is the setting file for Dummy Test 1.3",
     "Feel free to change stuff !"
       ]
-
-      tailComments =
-      [
-    "------------ The End !! -------------------",
-      ]
     }
 
     s := MySettings {}
-    f := File(`/tmp/settings.txt`).deleteOnExit
+    f := File(`/tmp/jsonsettings.txt`)//.deleteOnExit
     settings.save(s, f.out)
 
     // save & read
@@ -85,39 +80,4 @@ class SettingsTest : Test
 
 }
 
-class MySettings
-{
-  new make(|This| f) {f(this)}
 
-  @Setting
-  Int port := 8080
-
-  @Setting{help = ["The host"]; category = "server"}
-  Str host := "127.0.0.1"
-
-  @Setting{help = ["The paths", "That's just a test"]}
-  Str[] paths := ["path1", "path2"]
-
-  @Setting{help = ["It's complicated"] }
-  ComplexSetting complex := ComplexSetting {}
-
-  Int notSaved := 5
-}
-
-class BrokenSettings
-{
-  new make(|This| f) {f(this)}
-
-  @Setting{help = ["Nullable"] }
-  Int? Nullable
-}
-
-@Serializable
-class ComplexSetting
-{
-  new make(|This| f) {f(this)}
-
-  Str bar := "bar"
-  Int foo := 5
-  Str? someNullThing
-}
