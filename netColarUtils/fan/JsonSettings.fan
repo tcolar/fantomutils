@@ -97,7 +97,7 @@ final class JsonSettings
   ** Try to save the file "in place" so that if use reordered or added comments
   ** we leave those alone.
   ** Will remove props that are no longer present and add new ones with default vals.
-  ** If the file does not existyet, then it just calls save()
+  ** If the file does not exist yet, then it just calls save()
   Void update(Obj o, File f)
   {
     if( ! f.exists)
@@ -199,6 +199,26 @@ final class JsonSettings
     }
   }
 
+  ** Add any new setting to the end of the file but leave rest alone
+  private Void addMissingSettings(Obj o, File f)
+  {
+    fields := getSettingFields(o)
+    regex := Regex.fromStr(Str<|\W*(\w+)\W*=.*|>)
+    names := [,]
+    f.readAllLines.each
+    {
+      matcher := regex.matcher(it)
+      if(matcher.matches)
+        names.add(matcher.group(1))
+    }
+
+    fields.each
+    {
+      if( ! names.contains(it.name))
+        f.out(true).printLine.printLine(getFieldText(o, it).join("\n")).close
+    }
+  }
+
   ** Get the settings line for a field
   private Str[] getFieldText(Obj o, Field field)
   {
@@ -240,8 +260,8 @@ final class JsonSettings
     try
     {
       obj = settings.read(type, file.in)
-      // always update as to merge possible new settings
-      settings.update(obj, file)
+      // add any missing settings at end of file
+      settings.addMissingSettings(obj, file)
     }
     catch (Err e)
       echo("ERROR: Cannot load $file\n $e")

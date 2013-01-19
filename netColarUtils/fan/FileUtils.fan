@@ -9,10 +9,10 @@ class FileUtils
   static const Str[] knownTextExts := ["fan", "axon", "htm", "html", "css", "js", "cs",
   "properties", "props", "md", "txt", "java", "fog", "cpp", "bat", "sh", "h", "xml",
   "json", "c", "php", "fwt", "fandoc", "log", "csv", "markdown", "rdf", "settings",
-  "mustache", "sql", "patch", "dtd"]
+  "mustache", "sql", "patch", "dtd", "conf"]
 
   static const Str[] knownBinExts := ["pod", "zip", "class", "png", "jpg", "jpeg", "gif",
-  "obj", "dll", "exe", "jar", "ico", "rar", "tgz", "tar.gz", "bin", "debug", "pdf", "bmp",
+  "obj", "dll", "exe", "jar", "ico", "rar", "tgz", "gz", "tar.gz", "bin", "debug", "pdf", "bmp",
   "7z"]
 
 
