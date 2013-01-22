@@ -15,7 +15,7 @@ class JsonUtils
 {
   ** Save the object to the outstream
   ** Stream is guaranteed to be closed.
-  static Void save(OutStream out, Obj? obj, Bool closeStream := false)
+  static Void save(OutStream out, Obj? obj, Bool closeStream := true)
   {
     try
     {
