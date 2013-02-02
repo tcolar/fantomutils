@@ -11,5 +11,11 @@ using build
 **
 class Build : BuildPod
 {
-
+  new make()
+  {
+    podName = "helloworld"
+    summary = ""
+    depends = ["sys 1.0+", "concurrent 1.0+"]
+    srcDirs = [`fan/`]
+  }
 }
