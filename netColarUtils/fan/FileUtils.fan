@@ -9,11 +9,11 @@ class FileUtils
   static const Str[] knownTextExts := ["fan", "axon", "htm", "html", "css", "js", "cs",
   "properties", "props", "md", "txt", "java", "fog", "cpp", "bat", "sh", "h", "xml",
   "json", "c", "php", "fwt", "fandoc", "log", "csv", "markdown", "rdf", "settings",
-  "mustache", "sql", "patch", "dtd", "conf"]
+  "mustache", "sql", "patch", "dtd", "conf", "py"]
 
   static const Str[] knownBinExts := ["pod", "zip", "class", "png", "jpg", "jpeg", "gif",
   "obj", "dll", "exe", "jar", "ico", "rar", "tgz", "gz", "tar.gz", "bin", "debug", "pdf", "bmp",
-  "7z"]
+  "7z", "pyc"]
 
 
   ** Create a directory along with whatever parent directories are needed
@@ -51,7 +51,6 @@ class FileUtils
     if (f.mimeType != null && f.mimeType.mediaType == "text") return true
 
     // alright, at this point we don't know, so we will try to have a look
-    echo("checking $f")
     in := f.in
     try
     {
