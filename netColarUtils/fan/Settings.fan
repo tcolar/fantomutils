@@ -204,7 +204,10 @@ final class SettingUtils
       settings.update(obj, file)
     }
     catch (Err e)
+    {
       echo("ERROR: Cannot load $file\n $e")
+      e.trace
+    }
     if(obj == null)
     {
       obj = type.make

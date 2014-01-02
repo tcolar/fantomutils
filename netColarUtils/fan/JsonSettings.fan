@@ -264,7 +264,10 @@ final class JsonSettings
       settings.addMissingSettings(obj, file)
     }
     catch (Err e)
+    {
       echo("ERROR: Cannot load $file\n $e")
+      e.trace
+    }
     if(obj == null)
     {
       obj = type.make
